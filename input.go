@@ -92,8 +92,8 @@ func GetInputDevices() (*InputDevs, error) {
 	return devices, nil
 }
 
-// Listen for input events and shut down on event.
-func (devices *InputDevs) Listen(heartbeat chan struct{}) {
+// Monitor for input events and shut down on event.
+func (devices *InputDevs) Monitor(heartbeat chan struct{}) {
 	if len(devices.devs) == 0 {
 		fmt.Fprintf(os.Stderr, "no devices available\n")
 		return
@@ -151,7 +151,7 @@ func main() {
 
 	heartbeat := make(chan struct{})
 
-	go devices.Listen(heartbeat)
+	go devices.Monitor(heartbeat)
 
 	select {
 	case <-heartbeat:
