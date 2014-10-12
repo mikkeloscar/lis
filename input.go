@@ -12,6 +12,12 @@ const (
 	deviceDir = "/dev/input/"
 )
 
+// this way we can compare evt.Type to defined eventtypes
+const (
+	evKeys = uint16(evdev.EvKeys)
+	evRel  = uint16(evdev.EvRelative)
+)
+
 type inputDev struct {
 	devPath string
 	stop    chan struct{}
@@ -34,7 +40,7 @@ func handleDevice(inputDevice *inputDev, activity chan struct{}) {
 	for {
 		select {
 		case evt := <-dev.Inbox:
-			if evt.Type != evdev.EvKeys || evt.Type != evdev.EvRelative {
+			if evt.Type != evKeys && evt.Type != evRel {
 				continue // not the event we are looking for
 			}
 			// the user is still alive
@@ -98,13 +104,14 @@ func (devices *InputDevs) Listen(heartbeat chan struct{}) {
 	}
 
 	<-devices.Activity // wait for some activity
-
-	heartbeat <- struct{}{} // send heartbeat to main
+	fmt.Printf("Got activity!\n")
 
 	// stop all input device listeners
 	for _, device := range devices.devs {
 		device.stop <- struct{}{}
 	}
+
+	heartbeat <- struct{}{} // send heartbeat to main
 }
 
 func checkDevice(dev *evdev.Device) (string, bool) {
@@ -115,10 +122,20 @@ func checkDevice(dev *evdev.Device) (string, bool) {
 	return dev.Name(), true
 }
 
-// TODO refactor if only this little is needed.
+// TODO refactor maybe
 func correctDevice(dev *evdev.Device) bool {
-	// Check if device is a keyboard or mouse or something like that
-	if dev.Test(dev.EventTypes(), evdev.EvKeys, evdev.EvRelative) {
+	// check if device is a keyboard
+	if dev.Test(dev.EventTypes(), evdev.EvSync, evdev.EvKeys, evdev.EvMisc, evdev.EvLed, evdev.EvRepeat) {
+		return true
+	}
+
+	// check if device is a mouse
+	if dev.Test(dev.EventTypes(), evdev.EvSync, evdev.EvKeys, evdev.EvRelative, evdev.EvMisc) {
+		return true
+	}
+
+	// check if device is a touchpad
+	if dev.Test(dev.EventTypes(), evdev.EvSync, evdev.EvKeys, evdev.EvRelative, evdev.EvAbsolute) {
 		return true
 	}
 
@@ -134,5 +151,11 @@ func main() {
 
 	heartbeat := make(chan struct{})
 
-	devices.Listen(heartbeat)
+	go devices.Listen(heartbeat)
+
+	select {
+	case <-heartbeat:
+		fmt.Println("hello")
+		return
+	}
 }
