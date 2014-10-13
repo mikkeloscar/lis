@@ -29,8 +29,15 @@ func InitBacklight(interf string, def int) (*Backlight, error) {
 
 	backlight := &Backlight{fpath, 0, 0, 0}
 
-	backlight.GetMax()
-	backlight.SetBacklight(def)
+	_, err := backlight.GetMax()
+	if err != nil {
+		return nil, err
+	}
+
+	err = backlight.SetBacklight(def)
+	if err != nil {
+		return nil, err
+	}
 
 	return backlight, nil
 }
@@ -95,7 +102,10 @@ func (b *Backlight) SetBacklight(value int) error {
 
 	fd.WriteString(val)
 
-	fd.Close()
+	err = fd.Close()
+	if err != nil {
+		return err
+	}
 
 	// set current and default value
 	b.Current = value
