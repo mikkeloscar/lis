@@ -1,7 +1,7 @@
 package main
 
 import (
-	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -15,26 +15,19 @@ const (
 	brightness       = "brightness"
 )
 
-// Backlight defines a state for the screen backlight
+// Backlight defines a backlight class from /sys/class/backlight
 type Backlight struct {
-	interf  string
+	syspath string
 	Max     int
-	Current int
-	Default int // brightness value set by the user
 }
 
-// InitBacklight sets up a backlight state struct
-func InitBacklight(interf string, def int) (*Backlight, error) {
-	fpath := path.Join(sysPath, interf)
+// InitBacklight sets up a backlight struct
+func InitBacklight(syspath string, def int) (*Backlight, error) {
+	fpath := path.Join(sysPath, syspath)
 
-	backlight := &Backlight{fpath, 0, 0, 0}
+	backlight := &Backlight{fpath, 0}
 
-	_, err := backlight.GetMax()
-	if err != nil {
-		return nil, err
-	}
-
-	err = backlight.SetBacklight(def)
+	_, err := backlight.ReadMax()
 	if err != nil {
 		return nil, err
 	}
@@ -61,9 +54,9 @@ func readInt(fpath string) (int, error) {
 	return num, nil
 }
 
-// GetMax get max brightness value
-func (b *Backlight) GetMax() (int, error) {
-	fpath := path.Join(b.interf, maxBrightness)
+// ReadMax get max brightness value
+func (b *Backlight) ReadMax() (int, error) {
+	fpath := path.Join(b.syspath, maxBrightness)
 
 	max, err := readInt(fpath)
 	if err != nil {
@@ -74,25 +67,24 @@ func (b *Backlight) GetMax() (int, error) {
 	return max, nil
 }
 
-// GetActual get actual brightness value
-func (b *Backlight) GetActual() (int, error) {
-	fpath := path.Join(b.interf, actualBrightness)
+// Get get actual brightness value
+func (b *Backlight) Get() (int, error) {
+	fpath := path.Join(b.syspath, actualBrightness)
 
 	current, err := readInt(fpath)
 	if err != nil {
 		return 0, err
 	}
-	b.Current = current // set new current
 
 	return current, nil
 }
 
-// SetBacklight set brightness value
-func (b *Backlight) SetBacklight(value int) error {
-	if value < 0 {
-		return errors.New("invalid value")
+// Set set brightness value
+func (b *Backlight) Set(value int) error {
+	if value < 0 || value > b.Max {
+		return fmt.Errorf("invalid brightness value '%d'", value)
 	}
-	fpath := path.Join(b.interf, brightness)
+	fpath := path.Join(b.syspath, brightness)
 	val := strconv.Itoa(value)
 
 	fd, err := os.Open(fpath)
@@ -106,10 +98,6 @@ func (b *Backlight) SetBacklight(value int) error {
 	if err != nil {
 		return err
 	}
-
-	// set current and default value
-	b.Current = value
-	b.Default = value
 
 	return nil
 }
