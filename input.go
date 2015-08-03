@@ -32,6 +32,7 @@ type InputDevs struct {
 func handleDevice(inputDevice *inputDev, activity chan struct{}) {
 	dev, err := evdev.Open(inputDevice.devPath)
 	if err != nil {
+		// TODO send error over channel
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		return
 	}
@@ -72,8 +73,7 @@ func GetInputDevices() (*InputDevs, error) {
 
 			name, isInput := checkDevice(dev)
 			if isInput {
-				// TODO needed? is the same device represented more than
-				// one time?
+				// don't add the same device twice
 				_, ok := devices.devs[name]
 				if ok {
 					dev.Close()
@@ -92,8 +92,8 @@ func GetInputDevices() (*InputDevs, error) {
 	return devices, nil
 }
 
-// Monitor for input events and shut down on event.
-func (devices *InputDevs) Monitor(heartbeat chan struct{}) {
+// Wait monitor and wait for input events and shut down on event.
+func (devices *InputDevs) Wait(heartbeat chan struct{}) {
 	if len(devices.devs) == 0 {
 		fmt.Fprintf(os.Stderr, "no devices available\n")
 		return
@@ -111,7 +111,7 @@ func (devices *InputDevs) Monitor(heartbeat chan struct{}) {
 		device.stop <- struct{}{}
 	}
 
-	heartbeat <- struct{}{} // send heartbeat to main
+	heartbeat <- struct{}{} // send heartbeat to listener
 }
 
 func checkDevice(dev *evdev.Device) (string, bool) {
@@ -122,7 +122,7 @@ func checkDevice(dev *evdev.Device) (string, bool) {
 	return dev.Name(), true
 }
 
-// TODO refactor maybe
+// check if device is a keyboard, mouse or touchpad
 func correctDevice(dev *evdev.Device) bool {
 	// check if device is a keyboard
 	if dev.Test(dev.EventTypes(), evdev.EvSync, evdev.EvKeys, evdev.EvMisc, evdev.EvLed, evdev.EvRepeat) {
@@ -135,27 +135,9 @@ func correctDevice(dev *evdev.Device) bool {
 	}
 
 	// check if device is a touchpad
-	if dev.Test(dev.EventTypes(), evdev.EvSync, evdev.EvKeys, evdev.EvRelative, evdev.EvAbsolute) {
+	if dev.Test(dev.EventTypes(), evdev.EvSync, evdev.EvKeys, evdev.EvAbsolute) {
 		return true
 	}
 
 	return false
-}
-
-func main() {
-	devices, err := GetInputDevices()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		return
-	}
-
-	heartbeat := make(chan struct{})
-
-	go devices.Monitor(heartbeat)
-
-	select {
-	case <-heartbeat:
-		fmt.Println("hello")
-		return
-	}
 }
