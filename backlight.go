@@ -21,8 +21,8 @@ type Backlight struct {
 	Max     int
 }
 
-// InitBacklight sets up a backlight struct
-func InitBacklight(syspath string, def int) (*Backlight, error) {
+// NewBacklight sets up a backlight struct
+func NewBacklight(syspath string) (*Backlight, error) {
 	fpath := path.Join(sysPath, syspath)
 
 	backlight := &Backlight{fpath, 0}
@@ -67,7 +67,7 @@ func (b *Backlight) ReadMax() (int, error) {
 	return max, nil
 }
 
-// Get get actual brightness value
+// Get actual brightness value
 func (b *Backlight) Get() (int, error) {
 	fpath := path.Join(b.syspath, actualBrightness)
 
@@ -79,7 +79,7 @@ func (b *Backlight) Get() (int, error) {
 	return current, nil
 }
 
-// Set set brightness value
+// Set brightness value
 func (b *Backlight) Set(value int) error {
 	if value < 0 || value > b.Max {
 		return fmt.Errorf("invalid brightness value '%d'", value)
@@ -101,6 +101,17 @@ func (b *Backlight) Set(value int) error {
 
 	return nil
 }
+
+// ActualPath gets the sys-path to actual_brightness
+func (b *Backlight) ActualPath() string {
+	return path.Join(b.syspath, actualBrightness)
+}
+
+// func (b *Backlight) Open() (*os.File, error) {
+// 	fpath := path.Join(b.syspath, actualBrightness)
+// 	file, err := os.Open(fpath)
+// 	return file, err
+// }
 
 // Monitor backlight for events/changes
 // func (b *Backlight) Monitor() {
