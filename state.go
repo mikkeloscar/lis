@@ -6,10 +6,10 @@ import (
 )
 
 // State is a path to the lis state file
-type State string
+type StateFile string
 
 // Read value from stateFile
-func (s *State) Read() (uint16, error) {
+func (s *StateFile) Read() (uint16, error) {
 	file, err := os.Open(string(*s))
 	if err != nil {
 		return 0, err
@@ -27,7 +27,7 @@ func (s *State) Read() (uint16, error) {
 }
 
 // Write value to stateFile
-func (s *State) Write(value uint16) error {
+func (s *StateFile) Write(value uint16) error {
 	file, err := os.OpenFile(string(*s), os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err

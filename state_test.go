@@ -6,7 +6,7 @@ import (
 )
 
 func TestWrite(t *testing.T) {
-	state := State("test")
+	state := StateFile("test")
 
 	err := state.Write(100)
 	if err != nil {
@@ -15,7 +15,7 @@ func TestWrite(t *testing.T) {
 }
 
 func TestRead(t *testing.T) {
-	state := State("test")
+	state := StateFile("test")
 
 	v, err := state.Read()
 	if err != nil {

@@ -10,6 +10,11 @@ import (
 	// "github.com/mikkeloscar/udev"
 )
 
+type lis struct {
+	current int       // current brightness value
+	state   StateFile // state file
+}
+
 func main() {
 	devices, err := GetInputDevices()
 	if err != nil {
