@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-// State is a path to the lis state file
+// StateFile is a path to the lis state file
 type StateFile string
 
 // Read value from stateFile
