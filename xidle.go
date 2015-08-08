@@ -1,15 +1,13 @@
 package main
 
-/*
-#cgo pkg-config: x11 xscrnsaver
-#include <X11/Xlib.h>
-#include <X11/extensions/scrnsaver.h>
-
-// wrapper around the DefaultRootWindow macro
-static Drawable wrap_DefaultRootWindow(Display *diplay) {
-	return DefaultRootWindow(diplay);
-}
-*/
+// #cgo pkg-config: x11 xscrnsaver
+// #include <X11/Xlib.h>
+// #include <X11/extensions/scrnsaver.h>
+//
+// /* wrapper around the DefaultRootWindow macro */
+// static Drawable wrap_DefaultRootWindow(Display *diplay) {
+// 	return DefaultRootWindow(diplay);
+// }
 import "C"
 
 import "fmt"
