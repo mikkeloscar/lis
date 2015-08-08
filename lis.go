@@ -3,12 +3,18 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 )
 
 type lis struct {
-	current   uint16     // current brightness value
-	state     StateFile  // state file
-	backlight *Backlight // backlight
+	current   uint16        // current brightness value
+	state     StateFile     // state file
+	backlight *Backlight    // backlight
+	input     chan struct{} // input channel used to notify about activity when in idle mode
+	idle      chan struct{} // idle channel used when user is idle
+	power     chan struct{} // power channel used to notify about power changes (AC/Battery)
+	signals   chan struct{} // signals channel used to handle external signals
+	idleTime  uint          // idle time in minutes
 }
 
 // load state from stateFile
@@ -41,6 +47,48 @@ func (l *lis) getCurrent() error {
 }
 
 func (l *lis) run() error {
+	var err error
+
+	// start listening for idle
+	l.idleListener()
+
+	for {
+		select {
+		case <-l.input:
+			fmt.Println("handle input")
+			// undim screen
+			err = l.unDim()
+			if err != nil {
+				return err
+			}
+
+			// start listening for idle
+			l.idleListener()
+		case <-l.idle:
+			fmt.Println("idle")
+			// get current brightness level
+			err = l.getCurrent()
+			if err != nil {
+				return err
+			}
+
+			// dim screen
+			err = l.dim()
+			if err != nil {
+				return err
+			}
+
+			// start listening for input to exit idle mode
+			err = l.inputListener()
+			if err != nil {
+				return err
+			}
+		case power := <-l.power:
+			fmt.Println("power", power)
+		case signal := <-l.signals:
+			fmt.Println("signal", signal)
+		}
+	}
 }
 
 func (l *lis) dim() error {
@@ -49,6 +97,39 @@ func (l *lis) dim() error {
 
 func (l *lis) unDim() error {
 	return l.backlight.UnDim(0, int(l.current))
+}
+
+func (l *lis) inputListener() error {
+	devices, err := GetInputDevices()
+	if err != nil {
+		return err
+	}
+
+	go devices.Wait(l.input)
+
+	return nil
+}
+
+func (l *lis) idleListener() {
+	go l.xidle()
+}
+
+// TODO better error handling
+func (l *lis) xidle() {
+	for {
+		time.Sleep(time.Duration(l.idleTime) * time.Minute)
+		idleTime, err := XIdle()
+		if err != nil {
+			// TODO better
+			fmt.Println("error in XIdle: ", err.Error())
+			continue
+		}
+
+		if idleTime >= l.idleTime*60*60*1000 {
+			l.idle <- struct{}{}
+			break
+		}
+	}
 }
 
 func main() {
