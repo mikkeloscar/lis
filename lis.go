@@ -3,16 +3,52 @@ package main
 import (
 	"fmt"
 	"os"
-	// "syscall"
-
-	//"code.google.com/p/go.exp/inotify"
-
-	// "github.com/mikkeloscar/udev"
 )
 
 type lis struct {
-	current int       // current brightness value
-	state   StateFile // state file
+	current   uint16     // current brightness value
+	state     StateFile  // state file
+	backlight *Backlight // backlight
+}
+
+// load state from stateFile
+func (l *lis) loadState() error {
+	v, err := l.state.Read()
+	if err != nil {
+		return err
+	}
+
+	l.current = v
+
+	return nil
+}
+
+// store current state in stateFile
+func (l *lis) storeState() error {
+	return l.state.Write(l.current)
+}
+
+// get current brightness level
+func (l *lis) getCurrent() error {
+	v, err := l.backlight.Get()
+	if err != nil {
+		return err
+	}
+
+	l.current = uint16(v)
+
+	return nil
+}
+
+func (l *lis) run() error {
+}
+
+func (l *lis) dim() error {
+	return l.backlight.Dim(int(l.current), 0)
+}
+
+func (l *lis) unDim() error {
+	return l.backlight.UnDim(0, int(l.current))
 }
 
 func main() {

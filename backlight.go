@@ -13,6 +13,7 @@ const (
 	maxBrightness    = "max_brightness"
 	actualBrightness = "actual_brightness"
 	brightness       = "brightness"
+	dimIncrement     = 10
 )
 
 // Backlight defines a backlight class from /sys/class/backlight
@@ -97,6 +98,38 @@ func (b *Backlight) Set(value int) error {
 	err = fd.Close()
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (b *Backlight) Dim(start, end int) error {
+	var err error
+	interval := (start - end) / dimIncrement
+	current := start
+
+	for i := 0; i < dimIncrement; i++ {
+		current -= interval
+		err = b.Set(current)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (b *Backlight) UnDim(start, end int) error {
+	var err error
+	interval := (end - start) / dimIncrement
+	current := start
+
+	for i := 0; i < dimIncrement; i++ {
+		current += interval
+		err = b.Set(current)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
