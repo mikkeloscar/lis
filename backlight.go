@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"time"
 )
 
 const (
@@ -13,7 +14,7 @@ const (
 	maxBrightness    = "max_brightness"
 	actualBrightness = "actual_brightness"
 	brightness       = "brightness"
-	dimIncrement     = 10
+	dimIncrement     = 5
 )
 
 // Backlight defines a backlight class from /sys/class/backlight
@@ -88,12 +89,15 @@ func (b *Backlight) Set(value int) error {
 	fpath := path.Join(b.syspath, brightness)
 	val := strconv.Itoa(value)
 
-	fd, err := os.Open(fpath)
+	fd, err := os.Create(fpath)
 	if err != nil {
 		return err
 	}
 
-	fd.WriteString(val)
+	_, err = fd.WriteString(val)
+	if err != nil {
+		return err
+	}
 
 	err = fd.Close()
 	if err != nil {
@@ -103,50 +107,37 @@ func (b *Backlight) Set(value int) error {
 	return nil
 }
 
-func (b *Backlight) Dim(start, end int) error {
+func (b *Backlight) Dim(start, end int, errChan chan error) {
 	var err error
 	interval := (start - end) / dimIncrement
 	current := start
 
 	for i := 0; i < dimIncrement; i++ {
 		current -= interval
+		time.Sleep(50 * time.Millisecond)
 		err = b.Set(current)
 		if err != nil {
-			return err
+			errChan <- err
 		}
 	}
-
-	return nil
 }
 
-func (b *Backlight) UnDim(start, end int) error {
+func (b *Backlight) UnDim(start, end int, errChan chan error) {
 	var err error
 	interval := (end - start) / dimIncrement
 	current := start
 
 	for i := 0; i < dimIncrement; i++ {
 		current += interval
+		time.Sleep(50 * time.Millisecond)
 		err = b.Set(current)
 		if err != nil {
-			return err
+			errChan <- err
 		}
 	}
-
-	return nil
 }
 
 // ActualPath gets the sys-path to actual_brightness
 func (b *Backlight) ActualPath() string {
 	return path.Join(b.syspath, actualBrightness)
 }
-
-// func (b *Backlight) Open() (*os.File, error) {
-// 	fpath := path.Join(b.syspath, actualBrightness)
-// 	file, err := os.Open(fpath)
-// 	return file, err
-// }
-
-// Monitor backlight for events/changes
-// func (b *Backlight) Monitor() {
-
-// }

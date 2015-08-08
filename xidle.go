@@ -19,7 +19,7 @@ func XIdle() (uint, error) {
 
 	display := C.XOpenDisplay(C.CString(""))
 	if display == nil {
-		return 0, fmt.Errorf("unable to open X display")
+		return 0, fmt.Errorf("xidle: unable to open X display")
 	}
 	defer C.XCloseDisplay(display)
 

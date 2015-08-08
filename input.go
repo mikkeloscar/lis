@@ -82,7 +82,7 @@ func GetInputDevices() (*InputDevs, error) {
 
 				devices.devs[name] = &inputDev{
 					devicePath,
-					make(chan struct{}),
+					make(chan struct{}, 1),
 				}
 			}
 			// close the device, since we are not gonna use it.
@@ -104,7 +104,7 @@ func (devices *InputDevs) Wait(heartbeat chan struct{}) {
 	}
 
 	<-devices.Activity // wait for some activity
-	fmt.Printf("Got activity!\n")
+	// fmt.Printf("Got activity!\n")
 
 	// stop all input device listeners
 	for _, device := range devices.devs {
