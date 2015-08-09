@@ -13,27 +13,30 @@ type Lis struct {
 	input     chan struct{} // input channel used to notify about activity when in idle mode
 	idle      chan struct{} // idle channel used when user is idle
 	power     chan struct{} // power channel used to notify about power changes (AC/Battery)
-	signals   chan struct{} // signals channel used to handle external signals
-	errors    chan error    // errors channel
-	idleTime  uint          // idle time in minutes
+	// signals   chan struct{} // signals channel used to handle external signals
+	errors   chan error // errors channel
+	idleTime uint       // idle time in minutes
 }
 
 // NewLis creates a new Lis instance
-func NewLis(statefile string, idleTime uint) (*Lis, error) {
+func NewLis(config *Config) (*Lis, error) {
+	if config.Backlight != "intel" {
+		return nil, fmt.Errorf("backlight: %s not supported", config.Backlight)
+	}
+
 	backlight, err := NewBacklight("intel_backlight")
 	if err != nil {
 		return nil, err
 	}
 
 	return &Lis{
-		state:     StateFile(statefile),
+		state:     StateFile(config.StateFile),
 		backlight: backlight,
 		input:     make(chan struct{}),
 		idle:      make(chan struct{}),
 		power:     make(chan struct{}),
-		signals:   make(chan struct{}),
 		errors:    make(chan error),
-		idleTime:  idleTime,
+		idleTime:  config.IdleTime,
 	}, nil
 }
 
@@ -66,7 +69,7 @@ func (l *Lis) getCurrent() error {
 	return nil
 }
 
-func (l *Lis) run() error {
+func (l *Lis) run(errorChan chan error) {
 	var err error
 
 	// start Listening for idle
@@ -86,7 +89,8 @@ func (l *Lis) run() error {
 			// get current brightness level
 			err = l.getCurrent()
 			if err != nil {
-				return err
+				errorChan <- err
+				continue
 			}
 
 			// dim screen
@@ -95,14 +99,13 @@ func (l *Lis) run() error {
 			// start Listening for input to exit idle mode
 			err = l.inputListener()
 			if err != nil {
-				return err
+				errorChan <- err
+				continue
 			}
 		case power := <-l.power:
 			fmt.Println("power", power)
-		case signal := <-l.signals:
-			fmt.Println("signal", signal)
 		case err := <-l.errors:
-			fmt.Println("catch any errors", err.Error())
+			errorChan <- err
 		}
 	}
 }
