@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// Lis defines the core functionality of the lis daemon
 type Lis struct {
 	current   uint16        // current brightness value
 	state     StateFile     // state file
@@ -17,6 +18,7 @@ type Lis struct {
 	idleTime  uint          // idle time in minutes
 }
 
+// NewLis creates a new Lis instance
 func NewLis(statefile string, idleTime uint) (*Lis, error) {
 	backlight, err := NewBacklight("intel_backlight")
 	if err != nil {

@@ -107,6 +107,7 @@ func (b *Backlight) Set(value int) error {
 	return nil
 }
 
+// Dim backlight from start to end
 func (b *Backlight) Dim(start, end int, errChan chan error) {
 	var err error
 	interval := (start - end) / dimIncrement
@@ -122,6 +123,7 @@ func (b *Backlight) Dim(start, end int, errChan chan error) {
 	}
 }
 
+// UnDim backlight from start to end
 func (b *Backlight) UnDim(start, end int, errChan chan error) {
 	var err error
 	interval := (end - start) / dimIncrement
