@@ -9,8 +9,8 @@ import (
 type StateFile string
 
 // Read value from stateFile
-func (s *StateFile) Read() (uint16, error) {
-	file, err := os.Open(string(*s))
+func (s StateFile) Read() (uint16, error) {
+	file, err := os.Open(string(s))
 	if err != nil {
 		return 0, err
 	}
@@ -27,8 +27,8 @@ func (s *StateFile) Read() (uint16, error) {
 }
 
 // Write value to stateFile
-func (s *StateFile) Write(value uint16) error {
-	file, err := os.OpenFile(string(*s), os.O_CREATE|os.O_WRONLY, 0644)
+func (s StateFile) Write(value uint16) error {
+	file, err := os.OpenFile(string(s), os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
