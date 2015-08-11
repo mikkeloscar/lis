@@ -74,6 +74,7 @@ func (l *Lis) getCurrent() error {
 	return nil
 }
 
+// lis main loop
 func (l *Lis) run() {
 	var err error
 
@@ -83,7 +84,6 @@ func (l *Lis) run() {
 	for {
 		select {
 		case <-l.input:
-			fmt.Println("handle input")
 			// undim screen
 			l.unDim()
 			l.idleMode = false
@@ -91,7 +91,7 @@ func (l *Lis) run() {
 			// start Listening for idle
 			l.idleListener()
 		case <-l.idle:
-			fmt.Println("idle in run")
+			fmt.Println("enter idle mode")
 			// get current brightness level
 			err = l.getCurrent()
 			if err != nil {
@@ -139,24 +139,27 @@ func (l *Lis) run() {
 				os.Exit(exit)
 			}
 		case err := <-l.errors:
-			// TODO better logging
+			// Write error to stderr
 			fmt.Fprintln(os.Stderr, err.Error())
 		}
 	}
 }
 
+// dim screen
 func (l *Lis) dim() {
-	fmt.Println("dim outer")
+	fmt.Printf("dimming screen from brightness level: %d\n", l.current)
 	go l.backlight.Dim(int(l.current), 0, l.errors)
 }
 
+// undim screen
 func (l *Lis) unDim() {
-	fmt.Println("undim outer")
+	fmt.Printf("undimming screen to brightness level: %d\n", l.current)
 	go l.backlight.UnDim(0, int(l.current), l.errors)
 }
 
+// listen for input activity
 func (l *Lis) inputListener() error {
-	devices, err := GetInputDevices()
+	devices, err := GetInputDevices(l.errors)
 	if err != nil {
 		return err
 	}
@@ -166,8 +169,8 @@ func (l *Lis) inputListener() error {
 	return nil
 }
 
+// listen for user idling
 func (l *Lis) idleListener() {
-	fmt.Println("idle")
 	go l.xidle()
 }
 
