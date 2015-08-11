@@ -10,6 +10,7 @@ import (
 // Lis defines the core functionality of the lis daemon
 type Lis struct {
 	current   uint16         // current brightness value
+	idleMode  bool           // true if in idle mode
 	state     StateFile      // state file
 	backlight *Backlight     // backlight
 	input     chan struct{}  // input channel used to notify about activity when in idle mode
@@ -32,6 +33,7 @@ func NewLis(config *Config, sigChan chan os.Signal) (*Lis, error) {
 	}
 
 	return &Lis{
+		idleMode:  false,
 		state:     StateFile(config.StateFile),
 		backlight: backlight,
 		input:     make(chan struct{}),
@@ -84,6 +86,7 @@ func (l *Lis) run() {
 			fmt.Println("handle input")
 			// undim screen
 			l.unDim()
+			l.idleMode = false
 
 			// start Listening for idle
 			l.idleListener()
@@ -98,6 +101,7 @@ func (l *Lis) run() {
 
 			// dim screen
 			l.dim()
+			l.idleMode = true
 
 			// start Listening for input to exit idle mode
 			err = l.inputListener()
@@ -110,11 +114,29 @@ func (l *Lis) run() {
 		case sig := <-l.signals:
 			switch sig {
 			case syscall.SIGTERM:
-				fmt.Println("SIGTERM")
-				// err := lis.storeState()
-				// if err != nil {
-				// 	fmt.Fprintln(os.Stderr, err.Error())
-				// }
+				exit := 0
+
+				if l.idleMode {
+					err = l.storeState()
+					if err != nil {
+						fmt.Fprintln(os.Stderr, err.Error())
+						exit = 1
+					}
+				} else {
+					err = l.getCurrent()
+					if err != nil {
+						fmt.Fprintln(os.Stderr, err.Error())
+						exit = 1
+					}
+
+					err = l.storeState()
+					if err != nil {
+						fmt.Fprintln(os.Stderr, err.Error())
+						exit = 1
+					}
+				}
+
+				os.Exit(exit)
 			}
 		case err := <-l.errors:
 			// TODO better logging
