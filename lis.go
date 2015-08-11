@@ -2,24 +2,27 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"syscall"
 	"time"
 )
 
 // Lis defines the core functionality of the lis daemon
 type Lis struct {
-	current   uint16        // current brightness value
-	state     StateFile     // state file
-	backlight *Backlight    // backlight
-	input     chan struct{} // input channel used to notify about activity when in idle mode
-	idle      chan struct{} // idle channel used when user is idle
-	power     chan struct{} // power channel used to notify about power changes (AC/Battery)
-	// signals   chan struct{} // signals channel used to handle external signals
-	errors   chan error // errors channel
-	idleTime uint       // idle time in minutes
+	current   uint16         // current brightness value
+	idleMode  bool           // true if in idle mode
+	state     StateFile      // state file
+	backlight *Backlight     // backlight
+	input     chan struct{}  // input channel used to notify about activity when in idle mode
+	idle      chan struct{}  // idle channel used when user is idle
+	power     chan struct{}  // power channel used to notify about power changes (AC/Battery)
+	signals   chan os.Signal // signals channel used to handle external signals
+	errors    chan error     // errors channel
+	idleTime  uint           // idle time in minutes
 }
 
 // NewLis creates a new Lis instance
-func NewLis(config *Config) (*Lis, error) {
+func NewLis(config *Config, sigChan chan os.Signal) (*Lis, error) {
 	if config.Backlight != "intel" {
 		return nil, fmt.Errorf("backlight: %s not supported", config.Backlight)
 	}
@@ -30,11 +33,13 @@ func NewLis(config *Config) (*Lis, error) {
 	}
 
 	return &Lis{
+		idleMode:  false,
 		state:     StateFile(config.StateFile),
 		backlight: backlight,
 		input:     make(chan struct{}),
 		idle:      make(chan struct{}),
 		power:     make(chan struct{}),
+		signals:   sigChan,
 		errors:    make(chan error),
 		idleTime:  config.IdleTime,
 	}, nil
@@ -69,7 +74,7 @@ func (l *Lis) getCurrent() error {
 	return nil
 }
 
-func (l *Lis) run(errorChan chan error) {
+func (l *Lis) run() {
 	var err error
 
 	// start Listening for idle
@@ -81,6 +86,7 @@ func (l *Lis) run(errorChan chan error) {
 			fmt.Println("handle input")
 			// undim screen
 			l.unDim()
+			l.idleMode = false
 
 			// start Listening for idle
 			l.idleListener()
@@ -89,23 +95,52 @@ func (l *Lis) run(errorChan chan error) {
 			// get current brightness level
 			err = l.getCurrent()
 			if err != nil {
-				errorChan <- err
+				fmt.Fprintln(os.Stderr, err.Error())
 				continue
 			}
 
 			// dim screen
 			l.dim()
+			l.idleMode = true
 
 			// start Listening for input to exit idle mode
 			err = l.inputListener()
 			if err != nil {
-				errorChan <- err
+				fmt.Fprintln(os.Stderr, err.Error())
 				continue
 			}
 		case power := <-l.power:
 			fmt.Println("power", power)
+		case sig := <-l.signals:
+			switch sig {
+			case syscall.SIGTERM:
+				exit := 0
+
+				if l.idleMode {
+					err = l.storeState()
+					if err != nil {
+						fmt.Fprintln(os.Stderr, err.Error())
+						exit = 1
+					}
+				} else {
+					err = l.getCurrent()
+					if err != nil {
+						fmt.Fprintln(os.Stderr, err.Error())
+						exit = 1
+					}
+
+					err = l.storeState()
+					if err != nil {
+						fmt.Fprintln(os.Stderr, err.Error())
+						exit = 1
+					}
+				}
+
+				os.Exit(exit)
+			}
 		case err := <-l.errors:
-			errorChan <- err
+			// TODO better logging
+			fmt.Fprintln(os.Stderr, err.Error())
 		}
 	}
 }
@@ -139,7 +174,7 @@ func (l *Lis) idleListener() {
 // listen for X idletime
 func (l *Lis) xidle() {
 	for {
-		time.Sleep(time.Duration(l.idleTime) * time.Millisecond)
+		time.Sleep(time.Duration(l.idleTime/3) * time.Millisecond)
 		idleTime, err := XIdle()
 		if err != nil {
 			l.errors <- err

@@ -18,35 +18,16 @@ func main() {
 		os.Exit(1)
 	}
 
-	lis, err := NewLis(config)
+	signalChan := make(chan os.Signal, 2)
+	// signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
+	signal.Notify(signalChan, syscall.SIGTERM)
+
+	lis, err := NewLis(config, signalChan)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(1)
 	}
 
-	errorChan := make(chan error)
-
 	// run lis
-	go lis.run(errorChan)
-
-	signalChan := make(chan os.Signal, 2)
-	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
-	for {
-		select {
-		case sig := <-signalChan:
-			switch sig {
-			case os.Interrupt:
-				fmt.Println("os Interrupt")
-			case syscall.SIGTERM:
-				fmt.Println("SIGTERM")
-				// err := lis.storeState()
-				// if err != nil {
-				// 	fmt.Fprintln(os.Stderr, err.Error())
-				// }
-			}
-		case err = <-errorChan:
-			// TODO better logging
-			fmt.Fprintln(os.Stderr, err.Error())
-		}
-	}
+	lis.run()
 }
