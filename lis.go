@@ -152,7 +152,7 @@ func (l *Lis) idleListener() {
 // listen for X idletime
 func (l *Lis) xidle() {
 	for {
-		time.Sleep(time.Duration(l.idleTime) * time.Millisecond)
+		time.Sleep(time.Duration(l.idleTime/3) * time.Millisecond)
 		idleTime, err := XIdle()
 		if err != nil {
 			l.errors <- err
