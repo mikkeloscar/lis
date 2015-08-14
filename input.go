@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 
 	"github.com/jteeuwen/evdev"
 )
@@ -21,19 +20,20 @@ const (
 type inputDev struct {
 	devPath string
 	stop    chan struct{}
+	errors  chan error
 }
 
 // InputDevs defines a map of valid input devices
 type InputDevs struct {
 	devs     map[string]*inputDev
 	Activity chan struct{}
+	errors   chan error
 }
 
 func handleDevice(inputDevice *inputDev, activity chan struct{}) {
 	dev, err := evdev.Open(inputDevice.devPath)
 	if err != nil {
-		// TODO send error over channel
-		fmt.Fprintf(os.Stderr, "%v\n", err)
+		inputDevice.errors <- err
 		return
 	}
 	defer dev.Close()
@@ -53,12 +53,15 @@ func handleDevice(inputDevice *inputDev, activity chan struct{}) {
 }
 
 // GetInputDevices return a InputDevs containing valid input devices
-func GetInputDevices() (*InputDevs, error) {
-	devices := &InputDevs{make(map[string]*inputDev), make(chan struct{})}
+func GetInputDevices(errors chan error) (*InputDevs, error) {
+	devices := &InputDevs{
+		make(map[string]*inputDev),
+		make(chan struct{}),
+		errors,
+	}
 
 	devNames, err := ioutil.ReadDir(deviceDir)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
 		return nil, err
 	}
 
@@ -68,7 +71,7 @@ func GetInputDevices() (*InputDevs, error) {
 			devicePath := deviceDir + d.Name()
 			dev, err := evdev.Open(devicePath)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "%v\n", err)
+				return nil, err
 			}
 
 			name, isInput := checkDevice(dev)
@@ -83,6 +86,7 @@ func GetInputDevices() (*InputDevs, error) {
 				devices.devs[name] = &inputDev{
 					devicePath,
 					make(chan struct{}, 1),
+					errors,
 				}
 			}
 			// close the device, since we are not gonna use it.
@@ -95,7 +99,7 @@ func GetInputDevices() (*InputDevs, error) {
 // Wait monitor and wait for input events and shut down on event.
 func (devices *InputDevs) Wait(heartbeat chan struct{}) {
 	if len(devices.devs) == 0 {
-		fmt.Fprintf(os.Stderr, "no devices available\n")
+		devices.errors <- fmt.Errorf("no devices available")
 		return
 	}
 
