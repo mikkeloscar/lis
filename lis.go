@@ -54,12 +54,36 @@ func (l *Lis) loadState() error {
 
 	l.current = v
 
+	err = l.backlight.Set(int(l.current))
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 // store current state in stateFile
 func (l *Lis) storeState() error {
-	return l.state.Write(l.current)
+	if l.idleMode {
+		err := l.state.Write(l.current)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	err := l.getCurrent()
+	if err != nil {
+		return err
+	}
+
+	err = l.state.Write(l.current)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // get current brightness level
@@ -76,6 +100,13 @@ func (l *Lis) getCurrent() error {
 
 func (l *Lis) run() {
 	var err error
+
+	dbus, err := NewDBusHandler(l)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+	}
+
+	go dbus.Run(l.errors)
 
 	// start Listening for idle
 	l.idleListener()
@@ -116,24 +147,10 @@ func (l *Lis) run() {
 			case syscall.SIGTERM:
 				exit := 0
 
-				if l.idleMode {
-					err = l.storeState()
-					if err != nil {
-						fmt.Fprintln(os.Stderr, err.Error())
-						exit = 1
-					}
-				} else {
-					err = l.getCurrent()
-					if err != nil {
-						fmt.Fprintln(os.Stderr, err.Error())
-						exit = 1
-					}
-
-					err = l.storeState()
-					if err != nil {
-						fmt.Fprintln(os.Stderr, err.Error())
-						exit = 1
-					}
+				err = l.storeState()
+				if err != nil {
+					fmt.Fprintln(os.Stderr, err.Error())
+					exit = 1
 				}
 
 				os.Exit(exit)
