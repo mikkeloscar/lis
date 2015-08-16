@@ -13,6 +13,7 @@ type DBusHandler struct {
 	Signal  chan *dbus.Signal
 	closeCh chan struct{}
 	lis     *Lis
+	inhibit *os.File
 }
 
 // NewDBusHandler initializes a new DBusHandler
@@ -33,17 +34,13 @@ func NewDBusHandler(lis *Lis) (*DBusHandler, error) {
 // Run starts the DBusHandler event loop
 func (d *DBusHandler) Run(errCh chan error) {
 	var err error
-	var file *os.File
 
 	d.Signal = d.login1.Subscribe("PrepareForSleep")
 
+	// take inhibit lock
+	d.takeLock(errCh)
+
 	for {
-		if file == nil {
-			file, err = d.login1.Inhibit("sleep", "Backlight daemon", "Saving backlight level", "delay")
-			if err != nil {
-				errCh <- err
-			}
-		}
 		signal := <-d.Signal
 		switch signal.Name {
 		case "org.freedesktop.login1.Manager.PrepareForSleep":
@@ -54,13 +51,30 @@ func (d *DBusHandler) Run(errCh chan error) {
 					errCh <- err
 				}
 
-				file.Close()
-				file = nil
+				err = d.inhibit.Close()
+				if err != nil {
+					errCh <- err
+				}
+
+				d.inhibit = nil
 			} else { // go back from suspend
 				d.lis.loadState()
+				// take new lock
+				d.takeLock(errCh)
 			}
 		}
 
+	}
+}
+
+// take inhibitor lock if not already taken
+func (d *DBusHandler) takeLock(errCh chan error) {
+	var err error
+	if d.inhibit == nil {
+		d.inhibit, err = d.login1.Inhibit("sleep", "Backlight daemon", "Saving backlight level", "delay")
+		if err != nil {
+			errCh <- err
+		}
 	}
 }
 
