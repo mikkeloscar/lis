@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
+	"github.com/coreos/go-systemd/login1"
 	"github.com/godbus/dbus"
-	"github.com/mikkeloscar/go-systemd/login1"
 )
 
 // DBusHandler handles a DBus connection to receive signal on suspend
