@@ -1,4 +1,4 @@
-# lis - backlight daemon
+# lis - backlight daemon [![Travis BuildStatus](https://travis-ci.org/mikkeloscar/lis.svg?branch=master)](https://travis-ci.org/mikkeloscar/lis)
 
 `lis` is a daemon to automatically dim/undim the screen backlight when a user
 is idling/active, thus conserving energy and improving battery life.
