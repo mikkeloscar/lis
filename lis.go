@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// Lis defines the core functionality of the lis daemon
+// Lis defines the core state of the lis daemon.
 type Lis struct {
 	current   uint16         // current brightness value
 	idleMode  bool           // true if in idle mode
@@ -21,7 +21,7 @@ type Lis struct {
 	idleTime  uint           // idle time in minutes
 }
 
-// NewLis creates a new Lis instance
+// NewLis creates a new Lis instance.
 func NewLis(config *Config, sigChan chan os.Signal) (*Lis, error) {
 	if config.Backlight != "intel" {
 		return nil, fmt.Errorf("backlight: %s not supported", config.Backlight)
@@ -45,7 +45,7 @@ func NewLis(config *Config, sigChan chan os.Signal) (*Lis, error) {
 	}, nil
 }
 
-// load state from stateFile
+// load state from stateFile.
 func (l *Lis) loadState() error {
 	v, err := l.state.Read()
 	if err != nil {
@@ -62,7 +62,7 @@ func (l *Lis) loadState() error {
 	return nil
 }
 
-// store current state in stateFile
+// store current state in stateFile.
 func (l *Lis) storeState() error {
 	if l.idleMode {
 		err := l.state.Write(l.current)
@@ -86,7 +86,7 @@ func (l *Lis) storeState() error {
 	return nil
 }
 
-// get current brightness level
+// get current brightness level.
 func (l *Lis) getCurrent() error {
 	v, err := l.backlight.Get()
 	if err != nil {
@@ -98,7 +98,7 @@ func (l *Lis) getCurrent() error {
 	return nil
 }
 
-// lis main loop
+// lis main loop.
 func (l *Lis) run() {
 	var err error
 
@@ -162,19 +162,19 @@ func (l *Lis) run() {
 	}
 }
 
-// dim screen
+// dim screen.
 func (l *Lis) dim() {
 	fmt.Printf("dimming screen from brightness level: %d\n", l.current)
 	go l.backlight.Dim(int(l.current), 0, l.errors)
 }
 
-// undim screen
+// undim screen.
 func (l *Lis) unDim() {
 	fmt.Printf("undimming screen to brightness level: %d\n", l.current)
 	go l.backlight.UnDim(0, int(l.current), l.errors)
 }
 
-// listen for input activity
+// listen for input activity.
 func (l *Lis) inputListener() error {
 	devices, err := GetInputDevices(l.errors)
 	if err != nil {
@@ -186,12 +186,12 @@ func (l *Lis) inputListener() error {
 	return nil
 }
 
-// listen for user idling
+// listen for user idling.
 func (l *Lis) idleListener() {
 	go l.xidle()
 }
 
-// listen for X idletime
+// listen for X idletime.
 func (l *Lis) xidle() {
 	for {
 		time.Sleep(time.Duration(l.idleTime/3) * time.Millisecond)

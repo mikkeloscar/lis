@@ -17,13 +17,13 @@ const (
 	dimIncrement     = 5
 )
 
-// Backlight defines a backlight class from /sys/class/backlight
+// Backlight defines a backlight class from /sys/class/backlight.
 type Backlight struct {
 	syspath string
 	Max     int
 }
 
-// NewBacklight sets up a backlight struct
+// NewBacklight sets up a backlight struct.
 func NewBacklight(syspath string) (*Backlight, error) {
 	fpath := path.Join(sysPath, syspath)
 
@@ -37,7 +37,7 @@ func NewBacklight(syspath string) (*Backlight, error) {
 	return backlight, nil
 }
 
-// reads the value of a 'brightness' file
+// reads the value of a 'brightness' file.
 func readInt(fpath string) (int, error) {
 	buf, err := ioutil.ReadFile(fpath)
 	if err != nil {
@@ -56,7 +56,7 @@ func readInt(fpath string) (int, error) {
 	return num, nil
 }
 
-// ReadMax get max brightness value
+// ReadMax get max brightness value.
 func (b *Backlight) ReadMax() (int, error) {
 	fpath := path.Join(b.syspath, maxBrightness)
 
@@ -69,7 +69,7 @@ func (b *Backlight) ReadMax() (int, error) {
 	return max, nil
 }
 
-// Get actual brightness value
+// Get actual brightness value.
 func (b *Backlight) Get() (int, error) {
 	fpath := path.Join(b.syspath, actualBrightness)
 
@@ -81,7 +81,7 @@ func (b *Backlight) Get() (int, error) {
 	return current, nil
 }
 
-// Set brightness value
+// Set brightness value.
 func (b *Backlight) Set(value int) error {
 	if value < 0 || value > b.Max {
 		return fmt.Errorf("invalid brightness value '%d'", value)
@@ -107,7 +107,7 @@ func (b *Backlight) Set(value int) error {
 	return nil
 }
 
-// Dim backlight from start to end
+// Dim backlight from start to end.
 func (b *Backlight) Dim(start, end int, errChan chan error) {
 	var err error
 	interval := (start - end) / dimIncrement
@@ -123,7 +123,7 @@ func (b *Backlight) Dim(start, end int, errChan chan error) {
 	}
 }
 
-// UnDim backlight from start to end
+// UnDim backlight from start to end.
 func (b *Backlight) UnDim(start, end int, errChan chan error) {
 	var err error
 	interval := (end - start) / dimIncrement
@@ -139,7 +139,7 @@ func (b *Backlight) UnDim(start, end int, errChan chan error) {
 	}
 }
 
-// ActualPath gets the sys-path to actual_brightness
+// ActualPath gets the sys-path to actual_brightness.
 func (b *Backlight) ActualPath() string {
 	return path.Join(b.syspath, actualBrightness)
 }

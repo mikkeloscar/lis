@@ -12,7 +12,7 @@ import "C"
 
 import "fmt"
 
-// XIdle returns the xserver idle time in miliseconds
+// XIdle returns the xserver idle time in miliseconds.
 func XIdle() (uint, error) {
 	var eventBase, errorBase C.int
 	var info C.XScreenSaverInfo

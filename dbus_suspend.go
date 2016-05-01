@@ -7,7 +7,7 @@ import (
 	"github.com/godbus/dbus"
 )
 
-// DBusHandler handles a DBus connection to receive signal on suspend
+// DBusHandler handles a DBus connection to receive signal on suspend.
 type DBusHandler struct {
 	login1  *login1.Conn
 	Signal  chan *dbus.Signal
@@ -16,7 +16,7 @@ type DBusHandler struct {
 	inhibit *os.File
 }
 
-// NewDBusHandler initializes a new DBusHandler
+// NewDBusHandler initializes a new DBusHandler.
 func NewDBusHandler(lis *Lis) (*DBusHandler, error) {
 	l, err := login1.New()
 	if err != nil {
@@ -31,7 +31,7 @@ func NewDBusHandler(lis *Lis) (*DBusHandler, error) {
 
 }
 
-// Run starts the DBusHandler event loop
+// Run starts the DBusHandler event loop.
 func (d *DBusHandler) Run(errCh chan error) {
 	var err error
 
@@ -67,7 +67,7 @@ func (d *DBusHandler) Run(errCh chan error) {
 	}
 }
 
-// take inhibitor lock if not already taken
+// take inhibitor lock if not already taken.
 func (d *DBusHandler) takeLock(errCh chan error) {
 	var err error
 	if d.inhibit == nil {
@@ -78,7 +78,7 @@ func (d *DBusHandler) takeLock(errCh chan error) {
 	}
 }
 
-// Close closes the inhibit file
+// Close closes the inhibit file.
 func (d *DBusHandler) Close() {
 	d.closeCh <- struct{}{}
 }

@@ -23,7 +23,7 @@ type inputDev struct {
 	errors  chan error
 }
 
-// InputDevs defines a map of valid input devices
+// InputDevs defines a map of valid input devices.
 type InputDevs struct {
 	devs     map[string]*inputDev
 	Activity chan struct{}
@@ -52,7 +52,7 @@ func handleDevice(inputDevice *inputDev, activity chan struct{}) {
 	}
 }
 
-// GetInputDevices return a InputDevs containing valid input devices
+// GetInputDevices return a InputDevs containing valid input devices.
 func GetInputDevices(errors chan error) (*InputDevs, error) {
 	devices := &InputDevs{
 		make(map[string]*inputDev),
@@ -126,7 +126,7 @@ func checkDevice(dev *evdev.Device) (string, bool) {
 	return dev.Name(), true
 }
 
-// check if device is a keyboard, mouse or touchpad
+// check if device is a keyboard, mouse or touchpad.
 func correctDevice(dev *evdev.Device) bool {
 	// check if device is a keyboard
 	if dev.Test(dev.EventTypes(), evdev.EvSync, evdev.EvKeys, evdev.EvMisc, evdev.EvLed, evdev.EvRepeat) {
