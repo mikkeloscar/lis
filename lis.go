@@ -5,6 +5,8 @@ import (
 	"os"
 	"syscall"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 // Lis defines the core state of the lis daemon.
@@ -18,6 +20,7 @@ type Lis struct {
 	power     chan struct{}  // power channel used to notify about power changes (AC/Battery)
 	signals   chan os.Signal // signals channel used to handle external signals
 	errors    chan error     // errors channel
+	IPC       chan IPCCmd    // ipc channel used to communicate with the IPC server
 	idleTime  uint           // idle time in minutes
 }
 
@@ -41,6 +44,7 @@ func NewLis(config *Config, sigChan chan os.Signal) (*Lis, error) {
 		power:     make(chan struct{}),
 		signals:   sigChan,
 		errors:    make(chan error),
+		IPC:       make(chan IPCCmd),
 		idleTime:  config.IdleTime,
 	}, nil
 }
@@ -109,6 +113,9 @@ func (l *Lis) run() {
 
 	go dbus.Run(l.errors)
 
+	// start IPC server
+	go IPCServer(l)
+
 	// start Listening for idle
 	l.idleListener()
 
@@ -155,11 +162,75 @@ func (l *Lis) run() {
 
 				os.Exit(exit)
 			}
+		case ipc := <-l.IPC:
+			switch ipc.typ {
+			case IPCSet:
+				err = l.SetPercent(ipc.val.(float64))
+				if err != nil {
+					err = fmt.Errorf("failed to set brightness value: %s", err)
+					log.Errorf(err.Error())
+				}
+				ipc.resp <- err
+			case IPCSetUp, IPCSetDown:
+				current, err := l.GetPercent()
+				if err != nil {
+					err = fmt.Errorf("failed to get brightness value: %s", err)
+					log.Errorf(err.Error())
+				} else {
+					var value float64
+					switch ipc.typ {
+					case IPCSetUp:
+						value = current + ipc.val.(float64)
+					case IPCSetDown:
+						value = current - ipc.val.(float64)
+					}
+					err = l.SetPercent(value)
+					if err != nil {
+						err = fmt.Errorf("failed to set brightness value: %s", err)
+						log.Errorf(err.Error())
+					}
+				}
+
+				ipc.resp <- err
+			case IPCStatus:
+				val, err := l.GetPercent()
+				if err != nil {
+					err = fmt.Errorf("failed to get brightness value: %s", err)
+					log.Errorf(err.Error())
+					ipc.resp <- err
+				} else {
+					ipc.resp <- val
+				}
+			case IPCDPMSOn:
+			case IPCDPMSOff:
+			}
+
 		case err := <-l.errors:
 			// Write error to stderr
 			fmt.Fprintln(os.Stderr, err.Error())
 		}
 	}
+}
+
+// GetPercent gets the current backlight value as a percent value.
+// (max/current).
+func (l *Lis) GetPercent() (float64, error) {
+	val, err := l.backlight.Get()
+	if err != nil {
+		return 0, err
+	}
+
+	return float64(val) / float64(l.backlight.Max), nil
+}
+
+// SetPercent sets the current value from a percent value. (max * value).
+func (l *Lis) SetPercent(value float64) error {
+	if value > 1 || value < 0 {
+		return fmt.Errorf("Invalid percent value: %f", value)
+	}
+
+	val := int(float64(l.backlight.Max) * value)
+	return l.backlight.Set(val)
 }
 
 // dim screen.
