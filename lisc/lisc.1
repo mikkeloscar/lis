@@ -1,0 +1,39 @@
+.TH lisc 1 "May 2016" "version 0.1"
+
+.SH NAME
+lisc \- Control lis daemon
+
+.SH SYNOPSIS
+.B lisc [COMMAND] [ARGUMENTS]...
+
+.SH DESCRIPTION
+Communicate with the
+.BR lis
+daemon to modify and read the current brightness level.
+
+.SH COMMANDS
+.TP
+.B set <+|-value%>
+set, increase or decrease brightness level by percent
+.I value.
+.TP
+.B status
+get current brightness level.
+.TP
+.B dpms <on|off>
+set DPMS
+.I on
+or
+.I off.
+
+.SH OPTIONS
+.TP
+.B -h, --help
+display help and exit.
+
+.SH AUTHOR
+Written by Mikkel Oscar Lyderik.
+
+.SH SEE ALSO
+.BR lis (1),
+.BR lis.conf (5)

@@ -5,6 +5,24 @@ import (
 	"os"
 )
 
+func usage(exit int) {
+	usage := `Usage: lisc [COMMAND] ...
+
+Control lis daemon.
+
+  COMMANDS:
+    set <+|-value%>    set/increase/decrease brightness level
+    status	   get current brightness level
+    dmps <on|off>  set dpms on/off
+
+  OPTIONS:
+    -h, --help     display this help mesage
+`
+
+	fmt.Printf("%s", usage)
+	os.Exit(exit)
+}
+
 func main() {
 	if len(os.Args) > 1 {
 		client := &IPCClient{}
@@ -13,6 +31,7 @@ func main() {
 		case "set":
 			if len(os.Args) < 3 {
 				// error
+				usage(1)
 			}
 			err = client.Set(os.Args[2])
 		case "status":
@@ -24,10 +43,14 @@ func main() {
 		case "dpms":
 			if len(os.Args) < 3 {
 				// error
+				usage(1)
 			}
 			err = client.DPMS(os.Args[2])
+		case "-h", "--help":
+			usage(0)
 		default:
-			// invalid
+			// error
+			usage(1)
 		}
 
 		if err != nil {
@@ -36,4 +59,6 @@ func main() {
 		}
 		return
 	}
+	// error
+	usage(1)
 }
