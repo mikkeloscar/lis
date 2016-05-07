@@ -114,7 +114,14 @@ func (l *Lis) run() {
 	go dbus.Run(l.errors)
 
 	// start IPC server
-	go IPCServer(l)
+	ipc, err := NewIPCServer()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(1)
+	}
+
+	go ipc.Run(l)
+	defer ipc.Close()
 
 	// start Listening for idle
 	l.idleListener()
@@ -151,10 +158,17 @@ func (l *Lis) run() {
 			fmt.Println("power", power)
 		case sig := <-l.signals:
 			switch sig {
-			case syscall.SIGTERM:
+			case syscall.SIGINT:
 				exit := 0
 
 				err = l.storeState()
+				if err != nil {
+					fmt.Fprintln(os.Stderr, err.Error())
+					exit = 1
+				}
+
+				// shutdown ipc server
+				err = ipc.Close()
 				if err != nil {
 					fmt.Fprintln(os.Stderr, err.Error())
 					exit = 1
@@ -180,9 +194,9 @@ func (l *Lis) run() {
 					var value float64
 					switch ipc.typ {
 					case IPCSetUp:
-						value = current + ipc.val.(float64)
+						value = clampPct(current + ipc.val.(float64))
 					case IPCSetDown:
-						value = current - ipc.val.(float64)
+						value = clampPct(current - ipc.val.(float64))
 					}
 					err = l.SetPercent(value)
 					if err != nil {
@@ -279,4 +293,16 @@ func (l *Lis) xidle() {
 			break
 		}
 	}
+}
+
+func clampPct(value float64) float64 {
+	if value > 1 {
+		return 1
+	}
+
+	if value < 0 {
+		return 0
+	}
+
+	return value
 }

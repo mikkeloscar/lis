@@ -52,16 +52,26 @@ func (c *client) Errorf(msg string, args ...interface{}) {
 	fmt.Fprintf(c, "ERROR "+msg+"\n", args...)
 }
 
-func IPCServer(lis *Lis) {
-	ln, err := net.Listen("unix", socket)
+type IPCServer struct {
+	net.Listener
+}
+
+func NewIPCServer() (*IPCServer, error) {
+	var err error
+	ipc := &IPCServer{}
+	ipc.Listener, err = net.Listen("unix", socket)
 	if err != nil {
-		lis.errors <- fmt.Errorf("failed to start IPC socker at %s", socket)
-		return
+		return nil, fmt.Errorf("failed to start IPC: %s", err)
 	}
 
 	log.Infof("IPC server listening on socket: %s", socket)
+
+	return ipc, nil
+}
+
+func (i *IPCServer) Run(lis *Lis) {
 	for {
-		conn, err := ln.Accept()
+		conn, err := i.Accept()
 		if err != nil {
 			lis.errors <- fmt.Errorf("accept error: %s", err)
 		}
