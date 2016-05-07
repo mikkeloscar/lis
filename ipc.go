@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -62,6 +63,11 @@ func NewIPCServer() (*IPCServer, error) {
 	ipc.Listener, err = net.Listen("unix", socket)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start IPC: %s", err)
+	}
+
+	err = os.Chmod(socket, 0777)
+	if err != nil {
+		return nil, err
 	}
 
 	log.Infof("IPC server listening on socket: %s", socket)
