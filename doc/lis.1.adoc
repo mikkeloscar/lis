@@ -1,0 +1,38 @@
+/////
+vim:set ts=4 sw=4 noet spell spelllang=en_us:
+/////
+lis(1)
+======
+
+Name
+----
+lis - Daemon for controlling backlight brightness.
+
+
+Synopsis
+--------
+'lis' [OPTION]...
+
+
+Description
+-----------
+Auto dim/undim backlight when a user is idling/active.
+
+
+Options
+-------
+*-c* <file>::
+	path to config file. Default is '/etc/lis.conf'.
+
+*-h, \--help*::
+	display help and exit.
+
+
+Author
+------
+Written by Mikkel Oscar Lyderik.
+
+
+See Also
+--------
+**lisc**(1), **lis.conf**(5)

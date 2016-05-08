@@ -1,0 +1,48 @@
+/////
+vim:set ts=4 sw=4 noet spell spelllang=en_us:
+/////
+lisc(1)
+=======
+
+Name
+----
+lisc - Control **lis**(1) daemon
+
+
+Synopsis
+--------
+'lisc' [COMMAND] [ARGUMENTS]...
+
+
+Description
+-----------
+Communicate with the **lis**(1) daemon to modify and read the current
+brightness level.  Auto dim/undim backlight when a user is idling/active.
+
+
+Commands
+--------
+*set* <+|-value%>::
+	set, increase or decrease brightness level by percent 'value'.
+
+*status*::
+	get current brightness level.
+
+*dpms* <on|off>::
+	set DPMS 'on' or 'off'.
+
+
+Options
+-------
+*-h, \--help*::
+	display help and exit.
+
+
+Author
+------
+Written by Mikkel Oscar Lyderik.
+
+
+See Also
+--------
+**lis**(1), **lis.conf**(5)

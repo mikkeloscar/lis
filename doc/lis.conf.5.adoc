@@ -1,0 +1,64 @@
+/////
+vim:set ts=4 sw=4 noet spell spelllang=en_us:
+/////
+lis.conf(5)
+===========
+
+Name
+----
+lis.conf - lis backlight daemon configuration file
+
+
+Synopsis
+--------
+/etc/lis.conf
+
+
+Description
+-----------
+lis.conf is a configuration file in 'toml' format, read by **lis**(1) when
+it is launched.
+
+
+Example
+-------
+
+--------
+#
+# lis.conf
+#
+# path to state file storing the state through reboots
+statefile = "/var/lib/lis/brightness"
+
+# backlight type (intel,acpi)
+# intel - /sys/class/backlight/intel_backlight/
+backlight = "intel"
+
+# idle time in milliseconds before screen brightness is dimmed
+# default 600000 (10 minutes)
+idle = 600000
+--------
+
+
+Options
+-------
+*statefile =* /var/lib/lis/brightness::
+	Set the default 'statefile' path. The state file is used to recover the
+	brightness level through reboots.
+
+*backlight =* <intel|acpi>::
+	Set the 'backlight' type to control with **lis**(1). Currently supported
+	values are 'intel' and 'acpi'.
+
+*idle =* <time>::
+	Set the idle 'time' in milliseconds before the screen brightness is dimmed.
+
+
+Author
+------
+Written by Mikkel Oscar Lyderik.
+
+
+See Also
+--------
+**lis**(1), **lisc**(1)
