@@ -106,7 +106,7 @@ func handleConnection(client *client) {
 
 		match := setPatt.FindStringSubmatch(args[0])
 		if len(match) == 0 {
-			client.Errorf("Invalid")
+			client.Errorf("Invalid SET argument: %s", args[0])
 			break
 		}
 

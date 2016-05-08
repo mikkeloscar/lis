@@ -30,7 +30,7 @@ func main() {
 		switch os.Args[1] {
 		case "set":
 			if len(os.Args) < 3 {
-				// error
+				// invalid command
 				usage(1)
 			}
 			err = client.Set(os.Args[2])
@@ -42,14 +42,14 @@ func main() {
 			}
 		case "dpms":
 			if len(os.Args) < 3 {
-				// error
+				// invalid command
 				usage(1)
 			}
 			err = client.DPMS(os.Args[2])
 		case "-h", "--help":
 			usage(0)
 		default:
-			// error
+			// invalid command
 			usage(1)
 		}
 
@@ -59,6 +59,6 @@ func main() {
 		}
 		return
 	}
-	// error
+	// invalid command
 	usage(1)
 }

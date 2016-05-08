@@ -7,8 +7,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-
-	"github.com/siddontang/go/log"
 )
 
 const socket = "/var/run/lis.sock"
@@ -49,9 +47,8 @@ func (i *IPCClient) RPC(msg string, args ...interface{}) (interface{}, error) {
 
 		if resp[0] == "ERROR" {
 			if len(resp) > 1 {
-				log.Errorf(resp[1])
+				return nil, fmt.Errorf(resp[1])
 			}
-			return nil, nil
 		}
 	}
 
@@ -61,7 +58,7 @@ func (i *IPCClient) RPC(msg string, args ...interface{}) (interface{}, error) {
 func (i *IPCClient) Set(value string) error {
 	match := setPatt.FindStringSubmatch(value)
 	if len(match) == 0 {
-		return fmt.Errorf("Invalid SET argument: %s", value)
+		return fmt.Errorf("invalid SET argument: %s", value)
 	}
 
 	intVal, err := strconv.ParseInt(match[2], 10, 8)
@@ -70,7 +67,7 @@ func (i *IPCClient) Set(value string) error {
 	}
 
 	if intVal < 0 || intVal > 100 {
-		return fmt.Errorf("Invalid SET argument: %s", value)
+		return fmt.Errorf("invalid SET argument: %s", value)
 	}
 
 	_, err = i.RPC("SET %s", value)

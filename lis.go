@@ -240,7 +240,7 @@ func (l *Lis) GetPercent() (float64, error) {
 // SetPercent sets the current value from a percent value. (max * value).
 func (l *Lis) SetPercent(value float64) error {
 	if value > 1 || value < 0 {
-		return fmt.Errorf("Invalid percent value: %f", value)
+		return fmt.Errorf("invalid percent value: %f", value)
 	}
 
 	val := int(float64(l.backlight.Max) * value)
