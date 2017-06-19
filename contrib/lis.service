@@ -1,0 +1,8 @@
+[Unit]
+Description=Backlight dim/undim daemon
+
+[Service]
+ExecStart=/usr/bin/lis -c /etc/lis.conf
+
+[Install]
+WantedBy=multi-user.target

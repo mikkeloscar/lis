@@ -1,6 +1,6 @@
-.PHONY: clean deps build docs
+.PHONY: clean deps build docs install
 
-EXECUTABLE ?= lis
+EXECUTABLES ?= lis lisc/lisc
 MANPAGE_SRCS = $(wildcard doc/*.adoc)
 MANPAGES = $(MANPAGE_SRCS:.adoc=)
 
@@ -8,18 +8,30 @@ all: build docs
 
 clean:
 	go clean -i ./..
-	rm -rf $(EXECUTABLE)
+	rm -rf $(EXECUTABLES)
 	rm -rf $(MANPAGES)
 
 deps:
 	go get -t
 
-$(EXECUTABLE): $(wildcard *.go)
+$(EXECUTABLES): $(wildcard *.go)
 	go build -ldflags "-s"
+	go build -ldflags "-s" -o lisc/lisc ./lisc
 
-build: $(EXECUTABLE)
+build: $(EXECUTABLES)
 
 docs: $(MANPAGES)
 
 $(MANPAGES): $(MANPAGE_SRCS)
 	a2x --doctype manpage --format manpage $@.adoc
+
+install:
+	# bin
+	install -Dm755 lis $(DESTDIR)/usr/bin/lis
+	install -Dm755 lisc/lisc $(DESTDIR)/usr/bin/lisc
+	# config
+	install -Dm644 lis.conf $(DESTDIR)/etc/lis.conf
+	# service
+	install -Dm644 contrib/lis.service $(DESTDIR)/usr/lib/systemd/system/lis.service
+	# docs
+	# TODO
