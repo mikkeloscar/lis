@@ -24,13 +24,13 @@ const (
 	IPCSet IPCCmdType = iota
 	// IPCSetUp is the command for increasing the brightness value.
 	IPCSetUp
-	// IPCSetUp is the command for decreasing the brightness value.
+	// IPCSetDown is the command for decreasing the brightness value.
 	IPCSetDown
 	// IPCStatus is the command for getting current brightness value.
 	IPCStatus
 	// IPCDPMSOn is the command for enabling DPMS.
 	IPCDPMSOn
-	// IPCDPMSOn is the command for disabling DPMS.
+	// IPCDPMSOff is the command for disabling DPMS.
 	IPCDPMSOff
 )
 
