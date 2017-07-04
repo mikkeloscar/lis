@@ -61,6 +61,7 @@ func (c *client) Errorf(msg string, args ...interface{}) {
 	fmt.Fprintf(c, "ERROR "+msg+"\n", args...)
 }
 
+// IPCServer is a server for inter process communication on a unix socket.
 type IPCServer struct {
 	net.Listener
 }
