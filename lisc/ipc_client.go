@@ -13,10 +13,12 @@ const socket = "/var/run/lis.sock"
 
 var setPatt = regexp.MustCompile(`(\+|-)?(\d+)%`)
 
+// IPCClient defines an IPC client for communicating with the lis IPC server.
 type IPCClient struct {
 	net.Conn
 }
 
+// RPC sends a message to the IPC server and handles the response.
 func (i *IPCClient) RPC(msg string, args ...interface{}) (interface{}, error) {
 	var err error
 	i.Conn, err = net.Dial("unix", socket)
@@ -55,6 +57,7 @@ func (i *IPCClient) RPC(msg string, args ...interface{}) (interface{}, error) {
 	return nil, fmt.Errorf("invalid response: %s", line[:len(line)-1])
 }
 
+// Set sets the brightness value via IPC.
 func (i *IPCClient) Set(value string) error {
 	match := setPatt.FindStringSubmatch(value)
 	if len(match) == 0 {
@@ -74,6 +77,7 @@ func (i *IPCClient) Set(value string) error {
 	return err
 }
 
+// Status gets the brightness status via IPC.
 func (i *IPCClient) Status() (string, error) {
 	val, err := i.RPC("STATUS")
 	if err != nil {
@@ -82,8 +86,14 @@ func (i *IPCClient) Status() (string, error) {
 	return val.(string), err
 }
 
+// DPMS sets the enables/disables DPMS via IPC.
 func (i *IPCClient) DPMS(value string) error {
 	// TODO: check value
-	_, err := i.RPC("DPMS %s", value)
-	return err
+	switch value {
+	case "on", "off":
+		_, err := i.RPC("DPMS %s", value)
+		return err
+	default:
+		return fmt.Errorf("invalid value '%s', must be one of 'on, off'", value)
+	}
 }

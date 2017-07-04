@@ -16,17 +16,25 @@ var setPatt = regexp.MustCompile(`(\+|-)?(\d+)%`)
 
 const socket = "/var/run/lis.sock"
 
+// IPCCmdType defines the type of IPC command.
 type IPCCmdType int
 
 const (
+	// IPCSet is the command for setting a brightness value.
 	IPCSet IPCCmdType = iota
+	// IPCSetUp is the command for increasing the brightness value.
 	IPCSetUp
+	// IPCSetUp is the command for decreasing the brightness value.
 	IPCSetDown
+	// IPCStatus is the command for getting current brightness value.
 	IPCStatus
+	// IPCDPMSOn is the command for enabling DPMS.
 	IPCDPMSOn
+	// IPCDPMSOn is the command for disabling DPMS.
 	IPCDPMSOff
 )
 
+// IPCCmd defines an IPC command.
 type IPCCmd struct {
 	typ  IPCCmdType
 	val  interface{}
@@ -57,6 +65,7 @@ type IPCServer struct {
 	net.Listener
 }
 
+// NewIPCServer intializes a new IPC server.
 func NewIPCServer() (*IPCServer, error) {
 	var err error
 	ipc := &IPCServer{}
@@ -75,6 +84,7 @@ func NewIPCServer() (*IPCServer, error) {
 	return ipc, nil
 }
 
+// Run runs the IPC server.
 func (i *IPCServer) Run(lis *Lis) {
 	for {
 		conn, err := i.Accept()

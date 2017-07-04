@@ -40,7 +40,7 @@ Options
 
 Author
 ------
-Written by Mikkel Oscar Lyderik.
+Written by Mikkel Oscar Lyderik Larsen.
 
 
 See Also
