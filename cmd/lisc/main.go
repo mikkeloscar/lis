@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+
+	"github.com/mikkeloscar/lis"
 )
 
 func usage(exit int) {
@@ -25,7 +27,7 @@ Control lis daemon.
 
 func main() {
 	if len(os.Args) > 1 {
-		client := &IPCClient{}
+		client := &lis.IPCClient{}
 		var err error
 		switch os.Args[1] {
 		case "set":

@@ -1,4 +1,4 @@
-package main
+package lis
 
 // #cgo pkg-config: x11 xscrnsaver
 // #include <X11/Xlib.h>

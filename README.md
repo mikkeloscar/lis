@@ -1,4 +1,5 @@
-# lis - backlight daemon [![Travis BuildStatus](https://travis-ci.org/mikkeloscar/lis.svg?branch=master)](https://travis-ci.org/mikkeloscar/lis)
+# lis - backlight daemon
+[![Travis BuildStatus](https://travis-ci.org/mikkeloscar/lis.svg?branch=master)](https://travis-ci.org/mikkeloscar/lis)
 
 `lis` is a daemon to automatically dim/undim the screen backlight when a user
 is idling/active, thus conserving energy and improving battery life.
@@ -8,6 +9,38 @@ is idling/active, thus conserving energy and improving battery life.
 * libx11
 * libxss
 * systemd >= 183
+
+## lisc
+
+
+#### Commands
+
+```
+lisc set 50%
+lisc set -5%
+lisc set +5%
+
+lisc status
+
+lisc dpms off
+lisc dpms on
+```
+
+#### Protocol
+
+```
+SET 50%
+SET -5%
+SET +5%
+STATUS
+DPMS OFF
+DPMS ON
+
+Response:
+
+OK (optional msg)
+ERROR err msg
+```
 
 ## LICENSE
 

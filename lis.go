@@ -1,4 +1,4 @@
-package main
+package lis
 
 import (
 	"fmt"
@@ -102,8 +102,8 @@ func (l *Lis) getCurrent() error {
 	return nil
 }
 
-// lis main loop.
-func (l *Lis) run() {
+// Run runs the lis main loop.
+func (l *Lis) Run() {
 	var err error
 
 	dbus, err := NewDBusHandler(l)

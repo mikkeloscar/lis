@@ -1,20 +1,15 @@
-package main
+package lis
 
 import (
 	"bufio"
 	"fmt"
 	"net"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
 )
-
-var setPatt = regexp.MustCompile(`(\+|-)?(\d+)%`)
-
-const socket = "/var/run/lis.sock"
 
 // IPCCmdType defines the type of IPC command.
 type IPCCmdType int
