@@ -25,7 +25,7 @@ docs: $(MANPAGES)
 $(MANPAGES): $(MANPAGE_SRCS)
 	a2x --doctype manpage --format manpage $@.adoc
 
-install:
+install: build docs
 	# bin
 	install -Dm755 lis $(DESTDIR)/usr/bin/lis
 	install -Dm755 lisc/lisc $(DESTDIR)/usr/bin/lisc
@@ -34,4 +34,6 @@ install:
 	# service
 	install -Dm644 contrib/lis.service $(DESTDIR)/usr/lib/systemd/system/lis.service
 	# docs
-	# TODO
+	install -Dm644 doc/lis.1 $(DESTDIR)/usr/share/man/man1/lis.1
+	install -Dm644 lisc/doc/lisc.1 $(DESTDIR)/usr/share/man/man1/lisc.1
+	install -Dm644 doc/lis.conf.5 $(DESTDIR)/usr/share/man/man5/lis.conf.5
