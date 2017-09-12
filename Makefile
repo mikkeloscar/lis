@@ -32,7 +32,7 @@ install: build docs
 	# config
 	install -Dm644 lis.conf $(DESTDIR)/etc/lis.conf
 	# service
-	install -Dm644 contrib/lis.service $(DESTDIR)/usr/lib/systemd/system/lis.service
+	install -Dm644 contrib/lis@.service $(DESTDIR)/usr/lib/systemd/system/lis@.service
 	# docs
 	install -Dm644 doc/lis.1 $(DESTDIR)/usr/share/man/man1/lis.1
 	install -Dm644 doc/lisc.1 $(DESTDIR)/usr/share/man/man1/lisc.1

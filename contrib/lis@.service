@@ -2,6 +2,8 @@
 Description=Backlight dim/undim daemon
 
 [Service]
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/%i/.Xauthority
 ExecStart=/usr/bin/lis -c /etc/lis.conf
 
 [Install]
