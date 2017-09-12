@@ -158,7 +158,7 @@ func (l *Lis) Run() {
 			fmt.Println("power", power)
 		case sig := <-l.signals:
 			switch sig {
-			case syscall.SIGINT:
+			case syscall.SIGINT, syscall.SIGTERM:
 				exit := 0
 
 				err = l.storeState()

@@ -22,7 +22,7 @@ func main() {
 
 	signalChan := make(chan os.Signal, 2)
 	// signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
-	signal.Notify(signalChan, syscall.SIGINT)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 
 	l, err := lis.NewLis(config, signalChan)
 	if err != nil {
