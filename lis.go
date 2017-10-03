@@ -103,21 +103,25 @@ func (l *Lis) getCurrent() error {
 }
 
 // Run runs the lis main loop.
-func (l *Lis) Run() {
-	var err error
+func (l *Lis) Run() error {
+	// load initial state
+	err := l.loadState()
+	if err != nil {
+		return err
+	}
 
 	dbus, err := NewDBusHandler(l)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
+		return err
 	}
 
 	go dbus.Run(l.errors)
+	defer dbus.Close()
 
 	// start IPC server
 	ipc, err := NewIPCServer()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(1)
+		return err
 	}
 
 	go ipc.Run(l)
@@ -244,6 +248,7 @@ func (l *Lis) SetPercent(value float64) error {
 	}
 
 	val := int(float64(l.backlight.Max) * value)
+	l.current = uint16(val)
 	return l.backlight.Set(val)
 }
 

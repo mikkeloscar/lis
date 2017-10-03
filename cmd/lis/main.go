@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/mikkeloscar/lis"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -31,5 +32,8 @@ func main() {
 	}
 
 	// run lis
-	l.Run()
+	err = l.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
