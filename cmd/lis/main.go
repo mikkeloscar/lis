@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -17,23 +16,32 @@ func main() {
 
 	config, err := lis.ReadConfig(*confPath)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(1)
+		log.Fatal(err)
 	}
 
-	signalChan := make(chan os.Signal, 2)
-	// signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
-	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+	stopChan := make(chan struct{})
 
-	l, err := lis.NewLis(config, signalChan)
+	l, err := lis.NewLis(config, stopChan)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(1)
+		log.Fatal(err)
 	}
+
+	go handleSigterm(stopChan)
 
 	// run lis
 	err = l.Run()
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+
+func handleSigterm(stop chan<- struct{}) {
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
+	sig := <-signals
+	switch sig {
+	case syscall.SIGINT, syscall.SIGTERM:
+		log.Info("Received SIGTERM. Terminating...")
+		close(stop)
 	}
 }
