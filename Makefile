@@ -27,8 +27,8 @@ $(MANPAGES): $(MANPAGE_SRCS)
 
 install: build docs
 	# bin
-	install -Dm755 lis $(DESTDIR)/usr/bin/lis
-	install -Dm755 lisc $(DESTDIR)/usr/bin/lisc
+	install -Dm755 build/lis $(DESTDIR)/usr/bin/lis
+	install -Dm755 build/lisc $(DESTDIR)/usr/bin/lisc
 	# config
 	install -Dm644 lis.conf $(DESTDIR)/etc/lis.conf
 	# service
