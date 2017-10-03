@@ -291,7 +291,7 @@ func (l *Lis) xidle() {
 			continue
 		}
 
-		fmt.Println(idleTime)
+		log.Infof("Idling for %s", time.Duration(idleTime)*time.Millisecond)
 
 		if idleTime >= l.idleTime {
 			l.idle <- struct{}{}
