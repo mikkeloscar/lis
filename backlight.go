@@ -120,7 +120,6 @@ func (b *Backlight) Dim(start, end int, errChan chan error) {
 			current -= (delta % dimIncrement)
 		}
 		time.Sleep(50 * time.Millisecond)
-		fmt.Println(current)
 		err = b.Set(current)
 		if err != nil {
 			errChan <- err
