@@ -124,7 +124,7 @@ func (l *Lis) Run() error {
 		return err
 	}
 
-	go ipc.Run(l)
+	go ipc.Run(l.IPC, l.errors)
 	defer ipc.Close()
 
 	// start Listening for idle

@@ -38,7 +38,8 @@ type IPCCmd struct {
 
 type client struct {
 	net.Conn
-	lis *Lis
+	ipcCh  chan<- IPCCmd
+	errors chan<- error
 }
 
 // Ok sends an OK response to the client.
@@ -81,13 +82,18 @@ func NewIPCServer() (*IPCServer, error) {
 }
 
 // Run runs the IPC server.
-func (i *IPCServer) Run(lis *Lis) {
+func (i *IPCServer) Run(ipcCh chan<- IPCCmd, errCh chan<- error) {
 	for {
 		conn, err := i.Accept()
 		if err != nil {
-			lis.errors <- fmt.Errorf("accept error: %s", err)
+			errCh <- fmt.Errorf("accept error: %s", err)
 		}
-		go handleConnection(&client{conn, lis})
+		c := &client{
+			Conn:   conn,
+			ipcCh:  ipcCh,
+			errors: errCh,
+		}
+		go handleConnection(c)
 	}
 }
 
@@ -97,7 +103,7 @@ func handleConnection(client *client) {
 	reader := bufio.NewReader(client)
 	line, err := reader.ReadString('\n')
 	if err != nil {
-		client.lis.errors <- fmt.Errorf("unable to read from client: %s", err)
+		client.errors <- fmt.Errorf("unable to read from client: %s", err)
 		return
 	}
 
@@ -133,7 +139,7 @@ func handleConnection(client *client) {
 			ipcCmd.typ = IPCSetDown
 		}
 
-		client.lis.IPC <- ipcCmd
+		client.ipcCh <- ipcCmd
 		ok := <-ipcCmd.resp
 		if ok != nil {
 			err = ok.(error)
@@ -143,7 +149,7 @@ func handleConnection(client *client) {
 		}
 	case "STATUS":
 		ipcCmd.typ = IPCStatus
-		client.lis.IPC <- ipcCmd
+		client.ipcCh <- ipcCmd
 
 		status := <-ipcCmd.resp
 
@@ -163,7 +169,7 @@ func handleConnection(client *client) {
 		case "ON":
 			// enable DPMS
 			ipcCmd.typ = IPCDPMSOn
-			client.lis.IPC <- ipcCmd
+			client.ipcCh <- ipcCmd
 			ok := <-ipcCmd.resp
 			if ok.(bool) {
 				client.Ok()
@@ -173,7 +179,7 @@ func handleConnection(client *client) {
 		case "OFF":
 			// disable DPMS
 			ipcCmd.typ = IPCDPMSOff
-			client.lis.IPC <- ipcCmd
+			client.ipcCh <- ipcCmd
 			ok := <-ipcCmd.resp
 			if ok.(bool) {
 				client.Ok()
