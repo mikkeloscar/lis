@@ -53,7 +53,16 @@ func NewLis(config *Config, sigChan chan os.Signal) (*Lis, error) {
 func (l *Lis) loadState() error {
 	v, err := l.state.Read()
 	if err != nil {
-		return err
+		// if state files was not found set brightness to max value
+		if os.IsNotExist(err) {
+			max, err := l.backlight.ReadMax()
+			if err != nil {
+				return err
+			}
+			v = uint16(max)
+		} else {
+			return err
+		}
 	}
 
 	l.current = v
@@ -140,7 +149,7 @@ func (l *Lis) Run() error {
 			// start Listening for idle
 			l.idleListener()
 		case <-l.idle:
-			fmt.Println("enter idle mode")
+			log.Info("Entering idle mode")
 			// get current brightness level
 			err = l.getCurrent()
 			if err != nil {
@@ -155,7 +164,7 @@ func (l *Lis) Run() error {
 			// start Listening for input to exit idle mode
 			err = l.inputListener()
 			if err != nil {
-				fmt.Fprintln(os.Stderr, err.Error())
+				log.Error(err)
 				continue
 			}
 		case power := <-l.power:
@@ -185,15 +194,13 @@ func (l *Lis) Run() error {
 			case IPCSet:
 				err = l.SetPercent(ipc.val.(float64))
 				if err != nil {
-					err = fmt.Errorf("failed to set brightness value: %s", err)
-					log.Errorf(err.Error())
+					log.Errorf("Failed to set brightness value: %v", err)
 				}
 				ipc.resp <- err
 			case IPCSetUp, IPCSetDown:
 				current, err := l.GetPercent()
 				if err != nil {
-					err = fmt.Errorf("failed to get brightness value: %s", err)
-					log.Errorf(err.Error())
+					log.Errorf("Failed to get brightness value: %v", err)
 				} else {
 					var value float64
 					switch ipc.typ {
@@ -204,8 +211,7 @@ func (l *Lis) Run() error {
 					}
 					err = l.SetPercent(value)
 					if err != nil {
-						err = fmt.Errorf("failed to set brightness value: %s", err)
-						log.Errorf(err.Error())
+						log.Errorf("Failed to set brightness value: %v", err)
 					}
 				}
 
@@ -213,8 +219,7 @@ func (l *Lis) Run() error {
 			case IPCStatus:
 				val, err := l.GetPercent()
 				if err != nil {
-					err = fmt.Errorf("failed to get brightness value: %s", err)
-					log.Errorf(err.Error())
+					log.Errorf("Failed to get brightness value: %s", err)
 					ipc.resp <- err
 				} else {
 					ipc.resp <- val
@@ -254,13 +259,13 @@ func (l *Lis) SetPercent(value float64) error {
 
 // dim screen.
 func (l *Lis) dim() {
-	fmt.Printf("dimming screen from brightness level: %d\n", l.current)
+	log.Infof("Dimming screen from brightness level %d to %d", l.current, 0)
 	go l.backlight.Dim(int(l.current), 0, l.errors)
 }
 
 // undim screen.
 func (l *Lis) unDim() {
-	fmt.Printf("undimming screen to brightness level: %d\n", l.current)
+	log.Infof("Undimming screen to brightness level %d to %d", 0, l.current)
 	go l.backlight.UnDim(0, int(l.current), l.errors)
 }
 
