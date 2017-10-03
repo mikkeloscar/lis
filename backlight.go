@@ -110,12 +110,17 @@ func (b *Backlight) Set(value int) error {
 // Dim backlight from start to end.
 func (b *Backlight) Dim(start, end int, errChan chan error) {
 	var err error
-	interval := (start - end) / dimIncrement
+	delta := start - end
+	interval := delta / dimIncrement
 	current := start
 
 	for i := 0; i < dimIncrement; i++ {
 		current -= interval
+		if i == dimIncrement-1 {
+			current -= (delta % dimIncrement)
+		}
 		time.Sleep(50 * time.Millisecond)
+		fmt.Println(current)
 		err = b.Set(current)
 		if err != nil {
 			errChan <- err
@@ -126,11 +131,15 @@ func (b *Backlight) Dim(start, end int, errChan chan error) {
 // UnDim backlight from start to end.
 func (b *Backlight) UnDim(start, end int, errChan chan error) {
 	var err error
-	interval := (end - start) / dimIncrement
+	delta := end - start
+	interval := delta / dimIncrement
 	current := start
 
 	for i := 0; i < dimIncrement; i++ {
 		current += interval
+		if i == dimIncrement-1 {
+			current += (delta % dimIncrement)
+		}
 		time.Sleep(50 * time.Millisecond)
 		err = b.Set(current)
 		if err != nil {
