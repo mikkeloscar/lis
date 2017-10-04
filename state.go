@@ -42,5 +42,5 @@ func (s StateFile) Write(value uint16) error {
 		return err
 	}
 
-	return nil
+	return file.Sync()
 }
