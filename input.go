@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/jteeuwen/evdev"
+	"github.com/mikkeloscar/evdev"
 )
 
 const (
