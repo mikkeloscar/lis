@@ -15,5 +15,5 @@ install:
 - dep ensure --vendor-only -v
 
 script:
-- make
+- make build
 - make test
