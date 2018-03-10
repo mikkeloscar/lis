@@ -9,10 +9,7 @@ addons:
     - libxss-dev
 
 before_install:
-- go get -u github.com/golang/dep/cmd/dep
-
-install:
-- dep ensure --vendor-only -v
+- go get -u golang.org/x/vgo
 
 script:
 - make build

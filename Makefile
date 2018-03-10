@@ -4,13 +4,12 @@ EXECUTABLES  ?= build/lis build/lisc
 MANPAGE_SRCS = $(wildcard doc/*.adoc)
 MANPAGES     = $(MANPAGE_SRCS:.adoc=)
 SOURCES      = $(shell find . -name '*.go')
-GO           ?= go
+GO           ?= vgo
 GOPKGS       = $(shell $(GO) list ./...)
 
 all: build docs
 
 clean:
-	$(GO) clean -i ./..
 	@rm -rf build/
 	@rm -rf $(MANPAGES)
 
