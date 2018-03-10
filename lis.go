@@ -149,12 +149,6 @@ func (l *Lis) Run() error {
 			l.idleListener()
 		case <-l.idle:
 			log.Info("Entering idle mode")
-			// get current brightness level
-			err = l.getCurrent()
-			if err != nil {
-				fmt.Fprintln(os.Stderr, err.Error())
-				continue
-			}
 
 			// dim screen
 			l.dim()
