@@ -1,22 +1,25 @@
 .PHONY: clean deps build docs install
 
-EXECUTABLES ?= build/lis build/lisc
+EXECUTABLES  ?= build/lis build/lisc
 MANPAGE_SRCS = $(wildcard doc/*.adoc)
-MANPAGES = $(MANPAGE_SRCS:.adoc=)
+MANPAGES     = $(MANPAGE_SRCS:.adoc=)
+SOURCES      = $(shell find . -name '*.go')
+GO           ?= go
+GOPKGS       = $(shell $(GO) list ./...)
 
 all: build docs
 
 clean:
-	go clean -i ./..
+	$(GO) clean -i ./..
 	@rm -rf build/
 	@rm -rf $(MANPAGES)
 
-deps:
-	go get -t
+test:
+	$(GO) test -v $(GOPKGS)
 
-$(EXECUTABLES): $(wildcard *.go)
-	go build -ldflags "-s" -o build/lis ./cmd/lis
-	go build -ldflags "-s" -o build/lisc ./cmd/lisc
+$(EXECUTABLES): $(SOURCES)
+	$(GO) build -ldflags "-s" -o build/lis ./cmd/lis
+	$(GO) build -ldflags "-s" -o build/lisc ./cmd/lisc
 
 build: $(EXECUTABLES)
 

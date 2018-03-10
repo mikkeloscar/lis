@@ -1,15 +1,19 @@
 language: go
 go:
-- tip
+- 1.x
 
 addons:
   apt:
     packages:
-      - libx11-dev
-      - libxss-dev
+    - libx11-dev
+    - libxss-dev
+
+before_install:
+- go get -u github.com/golang/dep/cmd/dep
 
 install:
-  - go get -t ./...
+- dep ensure --vendor-only -v
 
 script:
-  - go test -v ./...
+- make
+- make test
