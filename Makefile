@@ -10,7 +10,6 @@ GOPKGS       = $(shell $(GO) list ./...)
 all: build docs
 
 clean:
-	$(GO) clean -i ./..
 	@rm -rf build/
 	@rm -rf $(MANPAGES)
 
