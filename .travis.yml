@@ -1,18 +1,15 @@
 language: go
 go:
-- 1.x
+  - "1.11"
+
+env:
+- GO111MODULE=on
 
 addons:
   apt:
     packages:
     - libx11-dev
     - libxss-dev
-
-before_install:
-- go get -u github.com/golang/dep/cmd/dep
-
-install:
-- dep ensure --vendor-only -v
 
 script:
 - make build
