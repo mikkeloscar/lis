@@ -21,7 +21,9 @@ func ReadConfig(filePath string) (*Config, error) {
 		return nil, err
 	}
 
-	if conf.Backlight != "intel" {
+	switch conf.Backlight {
+	case "intel", "amdgpu":
+	default:
 		return nil, fmt.Errorf("invalid backlight type: %s", conf.Backlight)
 	}
 

@@ -25,11 +25,17 @@ type Lis struct {
 
 // NewLis creates a new Lis instance.
 func NewLis(config *Config, stopCh <-chan struct{}) (*Lis, error) {
-	if config.Backlight != "intel" {
+	var backlightName string
+	switch config.Backlight {
+	case "intel":
+		backlightName = "intel_backlight"
+	case "amdgpu":
+		backlightName = "amdgpu_bl0"
+	default:
 		return nil, fmt.Errorf("backlight: %s not supported", config.Backlight)
 	}
 
-	backlight, err := NewBacklight("intel_backlight")
+	backlight, err := NewBacklight(backlightName)
 	if err != nil {
 		return nil, err
 	}

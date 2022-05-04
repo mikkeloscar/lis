@@ -30,8 +30,9 @@ Example
 # path to state file storing the state through reboots
 statefile = "/var/lib/lis/brightness"
 
-# backlight type (intel,acpi)
+# backlight type (intel,amdgpu,acpi)
 # intel - /sys/class/backlight/intel_backlight/
+# amdgpu - /sys/class/backlight/amdgpu_bl0/
 backlight = "intel"
 
 # idle time in milliseconds before screen brightness is dimmed
@@ -46,9 +47,9 @@ Options
 	Set the default 'statefile' path. The state file is used to recover the
 	brightness level through reboots.
 
-*backlight =* <intel|acpi>::
+*backlight =* <intel|amdgpu|acpi>::
 	Set the 'backlight' type to control with **lis**(1). Currently supported
-	values are 'intel' and 'acpi'.
+	values are 'intel', 'amdgpu' and 'acpi'.
 
 *idle =* <time>::
 	Set the idle 'time' in milliseconds before the screen brightness is dimmed.
