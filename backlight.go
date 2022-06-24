@@ -7,6 +7,8 @@ import (
 	"path"
 	"strconv"
 	"time"
+
+	"github.com/cenkalti/backoff/v4"
 )
 
 const (
@@ -25,11 +27,20 @@ type Backlight struct {
 
 // NewBacklight sets up a backlight struct.
 func NewBacklight(syspath string) (*Backlight, error) {
-	fpath := path.Join(sysPath, syspath)
+	backlight := &Backlight{
+		syspath: path.Join(sysPath, syspath),
+	}
 
-	backlight := &Backlight{fpath, 0}
+	// hack to ensure the /sys/class/backlight/<file> has been created by
+	// the kernel.
+	expBackoff := backoff.NewExponentialBackOff()
+	expBackoff.MaxInterval = 2 * time.Second
+	expBackoff.MaxElapsedTime = 60 * time.Second
 
-	_, err := backlight.ReadMax()
+	err := backoff.Retry(func() error {
+		_, err := backlight.ReadMax()
+		return err
+	}, expBackoff)
 	if err != nil {
 		return nil, err
 	}

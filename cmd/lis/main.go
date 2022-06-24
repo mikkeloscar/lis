@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"os"
 	"os/signal"
@@ -19,29 +20,25 @@ func main() {
 		log.Fatal(err)
 	}
 
-	stopChan := make(chan struct{})
-
-	l, err := lis.NewLis(config, stopChan)
+	l, err := lis.NewLis(config)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	go handleSigterm(stopChan)
+	ctx, cancel := context.WithCancel(context.Background())
+	go handleSigterm(cancel)
 
 	// run lis
-	err = l.Run()
+	err = l.Run(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func handleSigterm(stop chan<- struct{}) {
+func handleSigterm(cancelFunc func()) {
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
-	sig := <-signals
-	switch sig {
-	case syscall.SIGINT, syscall.SIGTERM:
-		log.Info("Received SIGTERM. Terminating...")
-		close(stop)
-	}
+	<-signals
+	log.Info("Received SIGTERM. Terminating...")
+	cancelFunc()
 }

@@ -1,6 +1,7 @@
 package lis
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
@@ -10,21 +11,21 @@ import (
 
 // Lis defines the core state of the lis daemon.
 type Lis struct {
-	current   uint16          // current brightness value
-	idleMode  bool            // true if in idle mode
-	state     StateFile       // state file
-	backlight *Backlight      // backlight
-	input     chan struct{}   // input channel used to notify about activity when in idle mode
-	idle      chan struct{}   // idle channel used when user is idle
-	power     chan struct{}   // power channel used to notify about power changes (AC/Battery)
-	stop      <-chan struct{} // stop channel used to stop the lis main loop
-	errors    chan error      // errors channel
-	IPC       chan IPCCmd     // ipc channel used to communicate with the IPC server
-	idleTime  uint            // idle time in minutes
+	current   uint16        // current brightness value
+	idleMode  bool          // true if in idle mode
+	state     StateFile     // state file
+	backlight *Backlight    // backlight
+	input     chan struct{} // input channel used to notify about activity when in idle mode
+	idle      chan struct{} // idle channel used when user is idle
+	power     chan struct{} // power channel used to notify about power changes (AC/Battery)
+	// stop      <-chan struct{} // stop channel used to stop the lis main loop
+	errors   chan error  // errors channel
+	IPC      chan IPCCmd // ipc channel used to communicate with the IPC server
+	idleTime uint        // idle time in minutes
 }
 
 // NewLis creates a new Lis instance.
-func NewLis(config *Config, stopCh <-chan struct{}) (*Lis, error) {
+func NewLis(config *Config) (*Lis, error) {
 	var backlightName string
 	switch config.Backlight {
 	case "intel":
@@ -47,7 +48,6 @@ func NewLis(config *Config, stopCh <-chan struct{}) (*Lis, error) {
 		input:     make(chan struct{}),
 		idle:      make(chan struct{}),
 		power:     make(chan struct{}),
-		stop:      stopCh,
 		errors:    make(chan error),
 		IPC:       make(chan IPCCmd),
 		idleTime:  config.IdleTime,
@@ -117,7 +117,7 @@ func (l *Lis) getCurrent() error {
 }
 
 // Run runs the lis main loop.
-func (l *Lis) Run() error {
+func (l *Lis) Run(ctx context.Context) error {
 	// load initial state
 	err := l.loadState()
 	if err != nil {
@@ -210,7 +210,7 @@ func (l *Lis) Run() error {
 		case err := <-l.errors:
 			// Write error to stderr
 			fmt.Fprintln(os.Stderr, err.Error())
-		case <-l.stop:
+		case <-ctx.Done():
 			return l.storeState()
 		}
 	}
