@@ -3,10 +3,9 @@ package lis
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"time"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // Lis defines the core state of the lis daemon.
@@ -154,7 +153,7 @@ func (l *Lis) Run(ctx context.Context) error {
 			// start Listening for idle
 			l.idleListener()
 		case <-l.idle:
-			log.Info("Entering idle mode")
+			slog.Info("Entering idle mode")
 
 			// dim screen
 			l.dim()
@@ -163,7 +162,7 @@ func (l *Lis) Run(ctx context.Context) error {
 			// start Listening for input to exit idle mode
 			err = l.inputListener()
 			if err != nil {
-				log.Error(err)
+				slog.Error(err.Error())
 				continue
 			}
 		case power := <-l.power:
@@ -173,13 +172,13 @@ func (l *Lis) Run(ctx context.Context) error {
 			case IPCSet:
 				err = l.SetPercent(ipc.val.(float64))
 				if err != nil {
-					log.Errorf("Failed to set brightness value: %v", err)
+					slog.Error(fmt.Sprintf("Failed to set brightness value: %v", err))
 				}
 				ipc.resp <- err
 			case IPCSetUp, IPCSetDown:
 				current, err := l.GetPercent()
 				if err != nil {
-					log.Errorf("Failed to get brightness value: %v", err)
+					slog.Error(fmt.Sprintf("Failed to get brightness value: %v", err))
 				} else {
 					var value float64
 					switch ipc.typ {
@@ -190,7 +189,7 @@ func (l *Lis) Run(ctx context.Context) error {
 					}
 					err = l.SetPercent(value)
 					if err != nil {
-						log.Errorf("Failed to set brightness value: %v", err)
+						slog.Error(fmt.Sprintf("Failed to set brightness value: %v", err))
 					}
 				}
 
@@ -198,7 +197,7 @@ func (l *Lis) Run(ctx context.Context) error {
 			case IPCStatus:
 				val, err := l.GetPercent()
 				if err != nil {
-					log.Errorf("Failed to get brightness value: %s", err)
+					slog.Error(fmt.Sprintf("Failed to get brightness value: %s", err))
 					ipc.resp <- err
 				} else {
 					ipc.resp <- val
@@ -240,13 +239,13 @@ func (l *Lis) SetPercent(value float64) error {
 
 // dim screen.
 func (l *Lis) dim() {
-	log.Infof("Dimming screen from brightness level %d to %d", l.current, 0)
+	slog.Info(fmt.Sprintf("Dimming screen from brightness level %d to %d", l.current, 0))
 	go l.backlight.Dim(int(l.current), 0, l.errors)
 }
 
 // undim screen.
 func (l *Lis) unDim() {
-	log.Infof("Undimming screen to brightness level %d to %d", 0, l.current)
+	slog.Info(fmt.Sprintf("Undimming screen to brightness level %d to %d", 0, l.current))
 	go l.backlight.UnDim(0, int(l.current), l.errors)
 }
 
@@ -277,7 +276,7 @@ func (l *Lis) xidle() {
 			continue
 		}
 
-		log.Infof("Idling for %s", time.Duration(idleTime)*time.Millisecond)
+		slog.Info(fmt.Sprintf("Idling for %s", time.Duration(idleTime)*time.Millisecond))
 
 		if idleTime >= l.idleTime {
 			l.idle <- struct{}{}

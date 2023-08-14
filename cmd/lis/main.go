@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 	"flag"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/mikkeloscar/lis"
-	log "github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -17,12 +17,14 @@ func main() {
 
 	config, err := lis.ReadConfig(*confPath)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error(err.Error())
+		os.Exit(1)
 	}
 
 	l, err := lis.NewLis(config)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error(err.Error())
+		os.Exit(1)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -31,7 +33,8 @@ func main() {
 	// run lis
 	err = l.Run(ctx)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error(err.Error())
+		os.Exit(1)
 	}
 }
 
@@ -39,6 +42,6 @@ func handleSigterm(cancelFunc func()) {
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 	<-signals
-	log.Info("Received SIGTERM. Terminating...")
+	slog.Info("Received SIGTERM. Terminating...")
 	cancelFunc()
 }

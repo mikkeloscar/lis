@@ -3,12 +3,11 @@ package lis
 import (
 	"bufio"
 	"fmt"
+	"log/slog"
 	"net"
 	"os"
 	"strconv"
 	"strings"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // IPCCmdType defines the type of IPC command.
@@ -76,7 +75,7 @@ func NewIPCServer() (*IPCServer, error) {
 		return nil, err
 	}
 
-	log.Infof("IPC server listening on socket: %s", socket)
+	slog.Info(fmt.Sprintf("IPC server listening on socket: %s", socket))
 
 	return ipc, nil
 }
