@@ -31,7 +31,7 @@ func NewLis(config *Config) (*Lis, error) {
 	case "intel":
 		backlightName = "intel_backlight"
 	case "amdgpu":
-		backlightName = "amdgpu_bl0"
+		backlightName = "amdgpu_bl1"
 	default:
 		return nil, fmt.Errorf("backlight: %s not supported", config.Backlight)
 	}
